@@ -1,0 +1,30 @@
+/*
+ * Storybook preview CSS — imports the design-system CSS chain so primitives
+ * render with the same tokens as production. Tailwind v4 + the `@theme` block
+ * from `@rare-structure-hq/tokens` needs the `@tailwindcss/vite` plugin
+ * (see vite.config.ts).
+ *
+ * Type faces are deliberately NOT loaded here — the apps own font loading in a
+ * later cycle. The visual contract is the token-driven layout, not the typeface;
+ * system fallbacks render the same geometry.
+ */
+@import "tailwindcss";
+@import "@rare-structure-hq/tokens/css";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+}
+
+html,
+body,
+#storybook-root,
+.sb-show-main {
+  background-color: var(--color-surface-base) !important;
+  color: var(--color-text-strong);
+  font-family: var(--font-sans);
+}
+
+[class*="font-mono"] {
+  font-family: var(--font-mono);
+}
