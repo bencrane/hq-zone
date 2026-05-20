@@ -41,4 +41,24 @@ describe("@rare-structure-hq/shared — catalyst-event schema", () => {
     void ingested_at;
     expect(() => catalystEventCreateSchema.parse(rest)).not.toThrow();
   });
+
+  it("location is optional and additive — absent by default", () => {
+    const parsed = catalystEventSchema.parse(wellFormed);
+    expect(parsed.location).toBeUndefined();
+  });
+
+  it("accepts a well-formed location and rejects out-of-range coordinates", () => {
+    const located = {
+      ...wellFormed,
+      location: { lon: -97.7431, lat: 30.2672, region: "Texas" },
+    };
+    const parsed = catalystEventSchema.parse(located);
+    expect(parsed.location?.region).toBe("Texas");
+    expect(() =>
+      catalystEventSchema.parse({ ...wellFormed, location: { lon: 200, lat: 0, region: "x" } }),
+    ).toThrow();
+    expect(() =>
+      catalystEventSchema.parse({ ...wellFormed, location: { lon: 0, lat: 0, region: "" } }),
+    ).toThrow();
+  });
 });

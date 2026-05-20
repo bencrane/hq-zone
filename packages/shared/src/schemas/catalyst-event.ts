@@ -38,6 +38,23 @@ export const catalystStatusSchema = z.enum(["ingested", "triaged", "thesis_open"
 export type CatalystStatus = z.infer<typeof catalystStatusSchema>;
 
 /**
+ * Geographic anchor for a catalyst event — where the structural signal is
+ * physically located. Optional on the event itself (a signal need not be
+ * geo-resolvable), but when present it is what plots the event on the
+ * origination map. `lon`/`lat` are WGS-84 decimal degrees; `region` is a
+ * human label (a US state, a metro, a jurisdiction).
+ */
+export const catalystLocationSchema = z.object({
+  /** WGS-84 longitude, decimal degrees. */
+  lon: z.number().min(-180).max(180),
+  /** WGS-84 latitude, decimal degrees. */
+  lat: z.number().min(-90).max(90),
+  /** Human-readable region label — e.g. "Texas", "Permian Basin, TX". */
+  region: z.string().min(1),
+});
+export type CatalystLocation = z.infer<typeof catalystLocationSchema>;
+
+/**
  * A single catalyst event. The required core (id / kind / severity / headline /
  * occurred_at / source / status) is stable; optional fields are the growth seam.
  */
@@ -65,6 +82,8 @@ export const catalystEventSchema = z.object({
   tags: z.array(z.string()).default([]),
   /** 0–1 confidence the signal is real and material; null until scored. */
   confidence: z.number().min(0).max(1).nullable().default(null),
+  /** Where the signal is physically anchored — drives the origination map. */
+  location: catalystLocationSchema.optional(),
 });
 export type CatalystEvent = z.infer<typeof catalystEventSchema>;
 

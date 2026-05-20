@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@import "@rare-structure-hq/tokens/css";
+
+/*
+ * The full design-token @theme block (color / spacing / type scale / radius /
+ * breakpoints) is carried by the `@rare-structure-hq/tokens/css` import above.
+ * Anything that should be a token belongs in `packages/tokens/src/tokens.ts`,
+ * not here.
+ *
+ * Fonts are kept inline — they reference fontsource packages, which the tokens
+ * package does not own.
+ */
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica,
+    Arial, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas,
+    monospace;
+  --font-display: "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas,
+    monospace;
+}
+
+html,
+body {
+  margin: 0;
+  background-color: var(--color-surface-base);
+  color: var(--color-text-strong);
+  font-family: var(--font-sans);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/*
+ * Terminal scanlines — a faint horizontal raster the demo phases layer over
+ * dark surfaces for the intelligence-terminal texture. A utility class rather
+ * than a token because it is a repeating-gradient texture, not a colour value;
+ * the colour stop itself is the `surface.sunken` token.
+ */
+.rs-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-surface-sunken) 55%, transparent) 0px,
+    color-mix(in srgb, var(--color-surface-sunken) 55%, transparent) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
