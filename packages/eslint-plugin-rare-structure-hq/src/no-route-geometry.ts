@@ -6,7 +6,7 @@
  * Tailwind utilities.
  *
  * Top-level JSX = the element returned directly from a default-exported or
- * named-exported PascalCase function in `apps/platform-app/src/routes/**`.
+ * named-exported PascalCase function in any app's `src/routes/**`.
  *
  * Banned utilities (matched as whole tokens in `className` string literals):
  *   - mx-auto
@@ -54,8 +54,8 @@ export const noRouteGeometry = createRule({
   defaultOptions: [],
   create(context) {
     const filename = context.filename ?? context.getFilename();
-    // Only enforce on route files.
-    if (!/\/apps\/platform-app\/src\/routes\//.test(filename)) {
+    // Only enforce on route files — any app's `src/routes/` directory.
+    if (!/\/apps\/[^/]+\/src\/routes\//.test(filename)) {
       return {};
     }
 

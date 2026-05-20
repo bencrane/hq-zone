@@ -11,3 +11,6 @@ storybook-static
 *.tsbuildinfo
 coverage
 .gstack/
+test-results
+playwright-report
+.playwright
