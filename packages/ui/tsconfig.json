@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": ["node", "bun"],
+    "paths": {
+      "@rare-structure-hq/tokens": ["../tokens/src/index.ts"],
+      "@rare-structure-hq/tokens/*": ["../tokens/src/*"]
+    }
+  },
+  "include": ["src/**/*", ".storybook/**/*"],
+  "exclude": ["node_modules", "dist", "storybook-static"]
+}

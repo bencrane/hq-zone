@@ -1,0 +1,13 @@
+node_modules
+dist
+.vite
+storybook-static
+.turbo
+*.log
+.env
+.env.local
+.DS_Store
+.next
+*.tsbuildinfo
+coverage
+.gstack/

@@ -1,0 +1,33 @@
+{
+  "name": "rare-structure-hq",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rare Structure HQ monorepo — design-system foundation",
+  "scripts": {
+    "build": "bun run --filter @rare-structure-hq/tokens build && bun run --filter @rare-structure-hq/ui build",
+    "typecheck": "tsc -p packages/tokens --noEmit && tsc -p packages/shared --noEmit && tsc -p packages/ui --noEmit && tsc -p packages/eslint-plugin-rare-structure-hq --noEmit",
+    "lint": "biome check packages/tokens packages/ui packages/shared packages/eslint-plugin-rare-structure-hq eslint.config.mjs",
+    "test": "bun run --filter @rare-structure-hq/shared test && bun run --filter @rare-structure-hq/tokens test && bun run --filter eslint-plugin-rare-structure-hq test && bun run --filter @rare-structure-hq/ui test",
+    "storybook": "bun run --filter @rare-structure-hq/ui storybook",
+    "storybook:build": "bun run --filter @rare-structure-hq/ui storybook:build"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "bun": ">=1.3.0",
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/bun": "1.2.0",
+    "@types/node": "22.10.0",
+    "@typescript-eslint/parser": "8.18.2",
+    "@typescript-eslint/utils": "8.18.2",
+    "bun-types": "^1.3.14",
+    "eslint": "9.17.0",
+    "eslint-plugin-rare-structure-hq": "workspace:*",
+    "typescript": "5.7.2"
+  }
+}
