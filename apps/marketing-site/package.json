@@ -7,6 +7,7 @@
     "dev": "vite --host 0.0.0.0 --port 5174",
     "build": "tsc -b --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 5174",
+    "start": "node ./serve.js",
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "@types/react": "19.0.2",
     "@types/react-dom": "19.0.2",
     "@vitejs/plugin-react": "4.3.4",
+    "express": "4.21.2",
     "tailwindcss": "4.0.0-beta.7",
     "typescript": "5.7.2",
     "vite": "6.0.3"
