@@ -1,10 +1,9 @@
-FROM oven/bun:1.3-slim AS base
+# Doppler CLI via multi-stage COPY from the official image.
+# No install.sh, no gpg, no network calls in our build layer.
+FROM dopplerhq/cli:3 AS doppler
 
-# Install Doppler CLI for runtime secret injection
-RUN apt-get update && apt-get install -y --no-install-recommends curl gnupg ca-certificates && \
-    curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sh && \
-    apt-get purge -y --auto-remove curl gnupg && \
-    rm -rf /var/lib/apt/lists/*
+FROM oven/bun:1.3-slim AS base
+COPY --from=doppler /bin/doppler /usr/local/bin/doppler
 
 WORKDIR /app
 
