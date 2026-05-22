@@ -3,10 +3,17 @@
 # Classic Dockerfile — no BuildKit-only features (Railway's builder rejects
 # `RUN --mount`); the uncached install is fine.
 #
-# Doppler is wired into the BUILD stage so `VITE_*` env vars are baked
-# into the bundle (Vite reads them at build time, not runtime). Railway
-# injects DOPPLER_TOKEN at build via the service-level env; the Doppler
-# CLI is COPYed in from the official image, mirroring platform-api.
+# Build-time env: Vite reads `VITE_*` env vars at build time and bakes
+# them into dist/. Two supported injection paths, picked at build time:
+#
+#   (a) DOPPLER_TOKEN is set on the Railway service env → wrap the build
+#       with `doppler run` to pull VITE_* from Doppler.
+#   (b) DOPPLER_TOKEN is absent → fall back to whatever VITE_* env vars
+#       Railway already exposes as build ARGs (operator can set them
+#       directly on the service in the Railway UI).
+#
+# This dual path keeps the deploy unblocked while the operator decides
+# which secret store to use; both routes feed the same `vite build`.
 
 FROM dopplerhq/cli:3 AS doppler
 
@@ -23,11 +30,26 @@ COPY . .
 RUN bun install --frozen-lockfile
 RUN bun run --filter @rare-structure-hq/tokens build
 WORKDIR /app/apps/platform-app
-# DOPPLER_TOKEN injected at build time by Railway; doppler run fetches
-# VITE_* secrets and Vite bakes them into dist/.
+
+# Build-time secrets. Railway promotes service variables declared as ARG
+# into the build env, so any subset of these may be set or unset.
 ARG DOPPLER_TOKEN
-ENV DOPPLER_TOKEN=$DOPPLER_TOKEN
-RUN doppler run -- bun run build
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_API_BASE_URL
+ENV DOPPLER_TOKEN=$DOPPLER_TOKEN \
+    VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
+    VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY \
+    VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+# Run via Doppler when a token is present, else fall through to the
+# already-injected ARG values. Either way Vite ends up with the right
+# VITE_* env at build time.
+RUN if [ -n "$DOPPLER_TOKEN" ]; then \
+      doppler run -- bun run build; \
+    else \
+      bun run build; \
+    fi
 
 # ── runtime: serve the static dist/ via Express (serve.js) ───────────────────
 # serve.js listens on process.env.PORT (Railway injects it). express is
