@@ -7,8 +7,16 @@ Hono BFF for the rare-structure-hq signed-in app.
 - Validates Supabase JWTs (ES256 via JWKS) issued by the `hq-rare-structure-hq` Supabase project
 - `/health` — unauthenticated liveness probe
 - `/api/v1/me` — returns the authenticated user's `user_id`, `email`, and `app_env`
+- `/api/v1/sam-opps/*` — broker to data-engine-x SAM.gov active opportunities:
+  - `GET  /api/v1/sam-opps/:notice_id` → opportunity detail
+  - `POST /api/v1/sam-opps/search` → filtered/paginated list
+  - `POST /api/v1/sam-opps/stats` → aggregation by dimension
 
-Deferred: Broker calls to data-engine-x (matched opportunities, recipient profile).
+  The user's Supabase JWT is forwarded as Bearer to DEX, which trusts hq-x
+  Supabase JWTs natively (no service-token hop). DEX response status + body
+  are passed through verbatim.
+
+Deferred: Recipient profile, project matching.
 
 ## Local dev
 
