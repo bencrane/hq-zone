@@ -1,10 +1,10 @@
 # platform-api
 
-Hono BFF for the rare-structure-hq signed-in app.
+Hono BFF for the hq-zone signed-in app.
 
 ## What it does
 
-- Validates Supabase JWTs (ES256 via JWKS) issued by the `hq-rare-structure-hq` Supabase project
+- Validates Supabase JWTs (ES256 via JWKS) issued by the `hq-zone` Supabase project
 - `/health` — unauthenticated liveness probe
 - `/api/v1/me` — returns the authenticated user's `user_id`, `email`, and `app_env`
 - `/api/v1/sam-opps/*` — broker to data-engine-x SAM.gov active opportunities:
@@ -24,21 +24,21 @@ Deferred: Recipient profile, project matching.
 # From monorepo root
 bun install
 
-# Secrets via Doppler (project: hq-rare-structure-hq, config: prd or dev)
-doppler run --project hq-rare-structure-hq --config dev -- bun run dev
+# Secrets via Doppler (project: hq-zone, config: prd or dev)
+doppler run --project hq-zone --config dev -- bun run dev
 ```
 
 ## Env vars
 
-Injected by Doppler at runtime. All `RSH_*` keys live in the `hq-rare-structure-hq` Doppler project.
+Injected by Doppler at runtime. All keys live in the `hq-zone` Doppler project.
 
 | Key | Description |
 |-----|-------------|
-| `RSH_SUPABASE_URL` | Supabase project URL |
-| `RSH_SUPABASE_JWKS_URL` | JWKS endpoint for JWT verification |
-| `RSH_SUPABASE_ISSUER` | Expected JWT issuer |
-| `RSH_SUPABASE_ANON_KEY` | Supabase anon key |
-| `RSH_SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_JWKS_URL` | JWKS endpoint for JWT verification |
+| `SUPABASE_ISSUER` | Expected JWT issuer |
+| `SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
 | `DEX_BASE_URL` | data-engine-x API base URL |
 | `DEX_SERVICE_TOKEN` | data-engine-x service token |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins |
@@ -48,10 +48,10 @@ Injected by Doppler at runtime. All `RSH_*` keys live in the `hq-rare-structure-
 
 ## Deployment
 
-Railway service: `rare-structure-hq-platform-api`
-Doppler: `hq-rare-structure-hq / prd`
+Railway service: `platform-api`
+Doppler: `hq-zone / prd`
 
 After Railway creates the service, set `DOPPLER_TOKEN`:
 ```bash
-doppler configs tokens create prd-railway --project hq-rare-structure-hq --config prd --plain
+doppler configs tokens create prd-railway --project hq-zone --config prd --plain
 ```

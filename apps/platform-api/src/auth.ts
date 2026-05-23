@@ -1,11 +1,11 @@
 /**
  * Supabase JWT validation via JWKS.
  *
- * The rare-structure-hq Supabase project issues asymmetric JWTs (ES256)
- * and publishes signing keys at the JWKS endpoint. platform-app
- * attaches the session access_token as a Bearer header; this middleware
- * verifies signature + issuer + audience and stashes the user on the
- * Hono context before any handler runs.
+ * The hq-zone Supabase project issues asymmetric JWTs (ES256) and
+ * publishes signing keys at the JWKS endpoint. platform-app attaches
+ * the session access_token as a Bearer header; this middleware verifies
+ * signature + issuer + audience and stashes the user on the Hono
+ * context before any handler runs.
  */
 
 import type { MiddlewareHandler } from "hono";
@@ -19,7 +19,7 @@ export type CurrentUser = {
   email: string;
 };
 
-const jwks = createRemoteJWKSet(new URL(env.RSH_SUPABASE_JWKS_URL));
+const jwks = createRemoteJWKSet(new URL(env.SUPABASE_JWKS_URL));
 
 export type AuthVariables = {
   user: CurrentUser;
@@ -36,7 +36,7 @@ export const requireUser: MiddlewareHandler<{ Variables: AuthVariables }> = asyn
 
   try {
     const { payload } = await jwtVerify(token, jwks, {
-      issuer: env.RSH_SUPABASE_ISSUER,
+      issuer: env.SUPABASE_ISSUER,
       audience: "authenticated",
     });
 
