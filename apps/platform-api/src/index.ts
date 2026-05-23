@@ -47,6 +47,10 @@ app.route("/api/v1/sam-opps", samOppsRoutes);
 app.route("/api/v1/campaigns", campaignsRoutes);
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
-console.log(`platform-api listening on :${port} [${env.APP_ENV}]`);
+// Bind explicitly to 0.0.0.0 so Railway's external healthcheck can reach
+// us. @hono/node-server passes `hostname` through to node's server.listen,
+// and an undefined hostname binds to localhost-only on Alpine images.
+const hostname = "0.0.0.0";
+console.log(`platform-api listening on ${hostname}:${port} [${env.APP_ENV}]`);
 
-serve({ fetch: app.fetch, port });
+serve({ fetch: app.fetch, port, hostname });

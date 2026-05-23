@@ -42,13 +42,29 @@ ENV DOPPLER_TOKEN=$DOPPLER_TOKEN \
     VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY \
     VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-# Run via Doppler when a token is present, else fall through to the
-# already-injected ARG values. Either way Vite ends up with the right
-# VITE_* env at build time.
+# Diagnostic: print which VITE_* values made it into the build env. Empty
+# values here are the root cause of "page renders blank" — better to see
+# them in the Railway build log than to ship an empty bundle.
+RUN echo "build-env: DOPPLER_TOKEN=$([ -n "$DOPPLER_TOKEN" ] && echo present || echo MISSING)" && \
+    echo "build-env: VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-MISSING}" && \
+    echo "build-env: VITE_SUPABASE_ANON_KEY=$([ -n "$VITE_SUPABASE_ANON_KEY" ] && echo present || echo MISSING)" && \
+    echo "build-env: VITE_API_BASE_URL=${VITE_API_BASE_URL:-MISSING}"
+
+# When DOPPLER_TOKEN is present, prefer it (pulls from Doppler hq-zone/prd
+# per doppler.yaml). When absent, the build args set above are the source.
+# Either way: hard-fail if the resulting VITE_SUPABASE_URL is empty — a
+# silent empty bundle is the failure mode this guard exists to prevent.
 RUN if [ -n "$DOPPLER_TOKEN" ]; then \
       doppler run -- bun run build; \
     else \
       bun run build; \
+    fi && \
+    if ! grep -q "supabase.co" dist/assets/index-*.js 2>/dev/null; then \
+      echo "BUILD ERROR: dist bundle does not contain supabase.co — VITE_SUPABASE_URL was empty at build time." >&2; \
+      echo "BUILD ERROR: Doppler did not provide the value AND no Railway build-arg fallback was set." >&2; \
+      echo "BUILD ERROR: Fix: either set VITE_SUPABASE_URL on the Railway service (passes as build-arg)," >&2; \
+      echo "BUILD ERROR: or verify DOPPLER_TOKEN is hq-zone-scoped and reaches the build context." >&2; \
+      exit 1; \
     fi
 
 # ── runtime: serve the static dist/ via Express (serve.js) ───────────────────
