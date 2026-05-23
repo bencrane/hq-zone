@@ -3,7 +3,7 @@
  * "+ column" header affordance, per-cell status pills. Subscribes to
  * the tables store so cells fill in live as recipe runs complete.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Loader2, Plus, X } from "lucide-react";
 
@@ -23,6 +23,8 @@ import {
 import { getWorkbook } from "@/lib/workbooks";
 import { AddColumnDialog } from "./AddColumnDialog";
 import { FindPeopleDialog } from "./FindPeopleDialog";
+import { SendToCampaignDialog } from "@/campaigns/SendToCampaignDialog";
+import type { EnrollRecipientInput } from "@/campaigns/api";
 
 function renderCell(cell: Cell | undefined, column: Column): React.ReactNode {
   if (!cell || cell.status === "empty") {
@@ -87,11 +89,53 @@ export default function TableView() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [addColOpen, setAddColOpen] = useState(false);
   const [findPeopleOpen, setFindPeopleOpen] = useState(false);
+  const [sendCampaignOpen, setSendCampaignOpen] = useState(false);
 
   useEffect(() => {
     if (!tableId) return;
     return subscribe(() => setTable(getTable(tableId)));
   }, [tableId]);
+
+  // Build enroll recipients from people-table rows. Looks up columns by name
+  // (Full name / Title / Email / LinkedIn / Company) so any combination of
+  // native + enrichment columns produces a complete recipient. Selected rows
+  // only; falls back to all rows when nothing's selected.
+  const enrollRecipients: EnrollRecipientInput[] = useMemo(() => {
+    if (!table || table.kind !== "people") return [];
+    const tbl = table;
+    const rowsForEnroll =
+      selected.size > 0 ? tbl.rows.filter((r) => selected.has(r.id)) : tbl.rows;
+    function colByName(...names: string[]): string | undefined {
+      const lower = names.map((n) => n.toLowerCase());
+      const c = tbl.columns.find((col) =>
+        lower.some((n) => col.name.toLowerCase().includes(n)),
+      );
+      return c?.id;
+    }
+    const fullNameCol = colByName("full name", "name");
+    const titleCol = colByName("title");
+    const emailCol = colByName("email");
+    const companyCol = colByName("company");
+    const linkedinCol = colByName("linkedin");
+    function readStr(row: Row, colId: string | undefined): string | null {
+      if (!colId) return null;
+      const v = row.cells[colId]?.value;
+      return typeof v === "string" ? v : v == null ? null : String(v);
+    }
+    return rowsForEnroll.map((r) => ({
+      external_source: "hq_zone.tables",
+      external_id: r.source_id,
+      display_name: readStr(r, fullNameCol) ?? r.source_id,
+      email: readStr(r, emailCol),
+      metadata: {
+        title: readStr(r, titleCol),
+        company_name: readStr(r, companyCol),
+        linkedin: readStr(r, linkedinCol),
+        parent_company_id: r.parent_company_id ?? null,
+        table_id: tbl.id,
+      },
+    }));
+  }, [table, selected]);
 
   if (!table) {
     return (
@@ -182,6 +226,15 @@ export default function TableView() {
             {table.kind === "companies" && (
               <Button size="sm" onClick={() => setFindPeopleOpen(true)}>
                 Find people
+              </Button>
+            )}
+            {table.kind === "people" && (
+              <Button
+                size="sm"
+                onClick={() => setSendCampaignOpen(true)}
+                disabled={enrollRecipients.length === 0}
+              >
+                Send to campaign
               </Button>
             )}
             <Button size="sm" variant="secondary" onClick={() => setAddColOpen(true)}>
@@ -296,6 +349,15 @@ export default function TableView() {
           open={findPeopleOpen}
           onOpenChange={setFindPeopleOpen}
           companiesTable={table}
+        />
+      )}
+      {table.kind === "people" && (
+        <SendToCampaignDialog
+          open={sendCampaignOpen}
+          onOpenChange={setSendCampaignOpen}
+          recipients={enrollRecipients}
+          sourceLabel={`${table.name} (${enrollRecipients.length} ${enrollRecipients.length === 1 ? "person" : "people"})`}
+          defaultCampaignName={table.name}
         />
       )}
     </Page>

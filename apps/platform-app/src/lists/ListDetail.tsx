@@ -1,11 +1,8 @@
 /**
  * Lead list detail — `/lists/:list_id`. Shows members of one list,
- * supports remove-from-list, delete-list, and a stubbed "Send to
- * hq-x campaign" hand-off.
- *
- * The campaign hand-off currently logs the payload to console and
- * shows a toast. Swap-out target: POST to hq-x's GTM initiatives
- * endpoint (lives in hq-all/apps/hq-x).
+ * supports remove-from-list, delete-list, and "Send to campaign"
+ * which enrolls the list into a new hq-x campaign via the platform-api
+ * orchestrator.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -21,6 +18,8 @@ import {
 } from "@/lib/leadLists";
 import { TAM_FIXTURE } from "@/tam/fixture";
 import { EMPLOYEE_BANDS, SENIORITY_BANDS } from "@/tam/constants";
+import { SendToCampaignDialog } from "@/campaigns/SendToCampaignDialog";
+import type { EnrollRecipientInput } from "@/campaigns/api";
 
 const seniorityLabel = new Map(SENIORITY_BANDS.map((b) => [b.value, b.label]));
 const employeeLabel = new Map(EMPLOYEE_BANDS.map((b) => [b.value, b.label]));
@@ -38,6 +37,7 @@ export default function ListDetail() {
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const [sendOpen, setSendOpen] = useState(false);
 
   useEffect(() => {
     if (!listId) return;
@@ -51,6 +51,27 @@ export default function ListDetail() {
     const idx = new Map(TAM_FIXTURE.map((r) => [r.person_id, r]));
     return list.person_ids.map((id) => idx.get(id)).filter(Boolean) as typeof TAM_FIXTURE;
   }, [list]);
+
+  const enrollRecipients: EnrollRecipientInput[] = useMemo(
+    () =>
+      members.map((m) => ({
+        external_source: "hq_zone.tam_fixture",
+        external_id: m.person_id,
+        display_name: m.full_name,
+        email: m.email,
+        person_state: m.person_state,
+        person_locality: m.person_locality,
+        metadata: {
+          title: m.title,
+          seniority_band: m.seniority_band,
+          function: m.function,
+          company_name: m.company_name,
+          company_id: m.company_id,
+          industry: m.industry,
+        },
+      })),
+    [members],
+  );
 
   if (!list) {
     return (
@@ -96,25 +117,6 @@ export default function ListDetail() {
     navigate("/lists");
   }
 
-  function handleSendToCampaign() {
-    if (!list) return;
-    // Stub: shape mirrors what hq-x's GTM initiative create endpoint will accept.
-    const payload = {
-      source: "hq-zone/tam",
-      list_id: list.id,
-      list_name: list.name,
-      person_ids: list.person_ids,
-      created_from: "lead-list-builder",
-      created_at: new Date().toISOString(),
-    };
-    // eslint-disable-next-line no-console
-    console.info("[lead-list → hq-x campaign] payload:", payload);
-    setToast(
-      `Stub: ${list.person_ids.length} person_ids logged for hq-x campaign hand-off. See console.`,
-    );
-    setTimeout(() => setToast(null), 5000);
-  }
-
   const headerState: boolean | "indeterminate" =
     selected.size === 0
       ? false
@@ -134,8 +136,12 @@ export default function ListDetail() {
             </Link>
           </Inline>
           <Inline gap="2" align="center">
-            <Button size="sm" onClick={handleSendToCampaign}>
-              Send to hq-x campaign
+            <Button
+              size="sm"
+              onClick={() => setSendOpen(true)}
+              disabled={members.length === 0}
+            >
+              Send to campaign
             </Button>
             <Button variant="ghost" size="sm" onClick={handleDelete}>
               Delete list
@@ -255,6 +261,14 @@ export default function ListDetail() {
           </Box>
         )}
       </Stack>
+
+      <SendToCampaignDialog
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        recipients={enrollRecipients}
+        sourceLabel={list.name}
+        defaultCampaignName={list.name}
+      />
     </Page>
   );
 }

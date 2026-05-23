@@ -18,6 +18,7 @@
 
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { HQBadge } from "./components/HQBadge";
 import Home from "./routes/Home";
 import MapDemo from "./routes/MapDemo";
 import { AuthProvider, useAuth } from "./lib/auth";
@@ -43,6 +44,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 export function App() {
   return (
     <AuthProvider>
+      <HQBadge />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/map" element={<MapDemo />} />
