@@ -8,6 +8,7 @@
  * unauthenticated.
  */
 import { useState, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 import { Button, Card, Page, Stack, Text } from "@rare-structure-hq/ui";
 import { supabase } from "@/lib/supabase";
@@ -15,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 export function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -80,14 +82,29 @@ export function SignIn() {
                     autoComplete="email"
                     className="h-10 w-full rounded-none border border-[color:var(--color-border-default)] bg-[color:var(--color-surface-base)] px-3 text-body-md text-[color:var(--color-text-strong)] placeholder:text-[color:var(--color-text-muted)] focus:border-[color:var(--color-accent-primary)] focus:outline-none"
                   />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    autoComplete="current-password"
-                    className="h-10 w-full rounded-none border border-[color:var(--color-border-default)] bg-[color:var(--color-surface-base)] px-3 text-body-md text-[color:var(--color-text-strong)] placeholder:text-[color:var(--color-text-muted)] focus:border-[color:var(--color-accent-primary)] focus:outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Password"
+                      autoComplete="current-password"
+                      className="h-10 w-full rounded-none border border-[color:var(--color-border-default)] bg-[color:var(--color-surface-base)] px-3 pr-20 text-body-md text-[color:var(--color-text-strong)] placeholder:text-[color:var(--color-text-muted)] focus:border-[color:var(--color-accent-primary)] focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                      className="absolute right-12 top-1/2 -translate-y-1/2 p-1 text-[color:var(--color-text-muted)] hover:text-[color:var(--color-text-default)]"
+                    >
+                      {showPassword ? (
+                        <EyeOff size={16} strokeWidth={1.5} />
+                      ) : (
+                        <Eye size={16} strokeWidth={1.5} />
+                      )}
+                    </button>
+                  </div>
                   <Button type="submit" disabled={submitting || !email || !password}>
                     {submitting ? "Signing in..." : "Sign in"}
                   </Button>

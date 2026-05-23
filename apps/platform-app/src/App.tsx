@@ -2,24 +2,36 @@
  * App — the platform-app router shell.
  *
  * Routes:
- *   `/`                          → unauthenticated catalyst map demo (untouched).
+ *   `/`                          → HQ home (cards: Workbooks, TAM, Lists, Govt Leads).
+ *   `/map`                       → catalyst map demo (anonymous).
+ *   `/workbooks`                 → Clay-shape workbook index (auth).
+ *   `/workbooks/:workbook_id`    → workbook detail (tables list, auth).
+ *   `/tables/:table_id`          → single table view (auth, flat URL with breadcrumb).
+ *   `/find/companies`            → criteria-driven find-companies route (auth).
+ *   `/tam`                       → person-grain lead search (auth).
+ *   `/tam/:person_id`            → single person detail (auth).
+ *   `/lists`                     → saved lead lists (auth).
+ *   `/lists/:list_id`            → single list detail (auth).
  *   `/opportunities`             → SAM.gov active opportunities list (auth).
  *   `/opportunities/:notice_id`  → single opportunity detail (auth).
- *
- * The /opportunities surface is gated by <RequireAuth>; the map route
- * remains anonymous so the demo link still works. Both branches live
- * under one <AuthProvider> at the App root so that signing in on the
- * /opportunities page also reflects on any other future authenticated
- * surface without a remount.
  */
 
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
+import Home from "./routes/Home";
 import MapDemo from "./routes/MapDemo";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { SignIn } from "./opportunities/SignIn";
 import OppsList from "./opportunities/OppsList";
 import OppDetail from "./opportunities/OppDetail";
+import TamList from "./tam/TamList";
+import TamDetail from "./tam/TamDetail";
+import ListsOverview from "./lists/ListsOverview";
+import ListDetail from "./lists/ListDetail";
+import TableView from "./tables/TableView";
+import FindCompaniesRoute from "./tables/FindCompaniesRoute";
+import WorkbooksIndex from "./workbooks/WorkbooksIndex";
+import WorkbookDetail from "./workbooks/WorkbookDetail";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
@@ -32,7 +44,73 @@ export function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/" element={<MapDemo />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/map" element={<MapDemo />} />
+        <Route
+          path="/tam"
+          element={
+            <RequireAuth>
+              <TamList />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/tam/:person_id"
+          element={
+            <RequireAuth>
+              <TamDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/lists"
+          element={
+            <RequireAuth>
+              <ListsOverview />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/lists/:list_id"
+          element={
+            <RequireAuth>
+              <ListDetail />
+            </RequireAuth>
+          }
+        />
+        <Route path="/tables" element={<Navigate to="/workbooks" replace />} />
+        <Route
+          path="/workbooks"
+          element={
+            <RequireAuth>
+              <WorkbooksIndex />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/workbooks/:workbook_id"
+          element={
+            <RequireAuth>
+              <WorkbookDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/tables/:table_id"
+          element={
+            <RequireAuth>
+              <TableView />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/find/companies"
+          element={
+            <RequireAuth>
+              <FindCompaniesRoute />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/opportunities"
           element={

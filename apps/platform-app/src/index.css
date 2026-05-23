@@ -15,8 +15,33 @@
     Arial, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas,
     monospace;
-  --font-display: "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas,
-    monospace;
+  /* Display = sans, not mono — mono headings are hard to read at scale. */
+  --font-display: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica,
+    Arial, sans-serif;
+}
+
+/*
+ * Platform-app palette override — pure-black dark mode with higher-contrast
+ * text. Lives here instead of @rare-structure-hq/tokens because the marketing
+ * site uses the navy/blue tokens; we only want the high-contrast variant on
+ * the operator HQ.
+ */
+:root {
+  --color-surface-base: #000000;
+  --color-surface-sunken: #000000;
+  --color-surface-raised: #0c0c0c;
+  --color-surface-overlay: rgba(0, 0, 0, 0.85);
+  --color-surface-raised-translucent: rgba(255, 255, 255, 0.04);
+
+  --color-text-primary: #ffffff;
+  --color-text-strong: #ffffff;
+  --color-text-default: #f5f5f5;
+  --color-text-muted: #c4c4c4;
+  --color-text-subtle: #8a8a8a;
+
+  --color-border-subtle: #1f1f1f;
+  --color-border-default: #2e2e2e;
+  --color-border-strong: #4a4a4a;
 }
 
 html,
