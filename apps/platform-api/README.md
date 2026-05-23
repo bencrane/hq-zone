@@ -34,13 +34,12 @@ Injected by Doppler at runtime. All keys live in the `hq-zone` Doppler project.
 
 | Key | Description |
 |-----|-------------|
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_JWKS_URL` | JWKS endpoint for JWT verification |
-| `SUPABASE_ISSUER` | Expected JWT issuer |
-| `SUPABASE_ANON_KEY` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
-| `DEX_BASE_URL` | data-engine-x API base URL |
+| `SUPABASE_JWKS_URL` | JWKS endpoint for incoming user-JWT verification |
+| `SUPABASE_ISSUER` | Expected `iss` claim on incoming user JWTs |
+| `DEX_BASE_URL` | data-engine-x API base URL (sam-opps, factory reads) |
 | `DEX_SERVICE_TOKEN` | data-engine-x service token |
+| `BACKEND_X_API_URL` | backend-engine API base URL (campaigns, user/org state) |
+| `BACKEND_X_SERVICE_TOKEN` | Bearer token for BFF-to-backend-engine calls |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins |
 | `APP_ENV` | `prd` \| `stg` \| `dev` |
 
