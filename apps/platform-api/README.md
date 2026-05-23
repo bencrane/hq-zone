@@ -7,14 +7,14 @@ Hono BFF for the hq-zone signed-in app.
 - Validates Supabase JWTs (ES256 via JWKS) issued by the `hq-zone` Supabase project
 - `/health` — unauthenticated liveness probe
 - `/api/v1/me` — returns the authenticated user's `user_id`, `email`, and `app_env`
-- `/api/v1/sam-opps/*` — broker to data-engine-x SAM.gov active opportunities:
+- `/api/v1/sam-opps/*` — broker to backend-engine (which proxies on to data-engine-x):
   - `GET  /api/v1/sam-opps/:notice_id` → opportunity detail
   - `POST /api/v1/sam-opps/search` → filtered/paginated list
   - `POST /api/v1/sam-opps/stats` → aggregation by dimension
 
-  The user's Supabase JWT is forwarded as Bearer to DEX, which trusts hq-x
-  Supabase JWTs natively (no service-token hop). DEX response status + body
-  are passed through verbatim.
+  Outbound carries `Authorization: Bearer <BACKEND_X_SERVICE_TOKEN>` as the BFF
+  identity and `X-User-Bearer: <user JWT>` so backend-engine can scope the
+  request to the user. backend-engine response is passed through verbatim.
 
 Deferred: Recipient profile, project matching.
 
@@ -36,9 +36,7 @@ Injected by Doppler at runtime. All keys live in the `hq-zone` Doppler project.
 |-----|-------------|
 | `SUPABASE_JWKS_URL` | JWKS endpoint for incoming user-JWT verification |
 | `SUPABASE_ISSUER` | Expected `iss` claim on incoming user JWTs |
-| `DEX_BASE_URL` | data-engine-x API base URL (sam-opps, factory reads) |
-| `DEX_SERVICE_TOKEN` | data-engine-x service token |
-| `BACKEND_X_API_URL` | backend-engine API base URL (campaigns, user/org state) |
+| `BACKEND_X_API_URL` | backend-engine API base URL (sole upstream) |
 | `BACKEND_X_SERVICE_TOKEN` | Bearer token for BFF-to-backend-engine calls |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins |
 | `APP_ENV` | `prd` \| `stg` \| `dev` |
