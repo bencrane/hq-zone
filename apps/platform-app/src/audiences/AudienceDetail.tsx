@@ -12,7 +12,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import type { Audience } from "@rare-structure-hq/shared";
 import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 
-import { deleteAudience, getAudience } from "./api";
+import { computeAudience, deleteAudience, getAudience } from "./api";
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "—";
@@ -29,6 +29,7 @@ export default function AudienceDetail() {
   const [audience, setAudience] = useState<Audience | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [computing, setComputing] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -48,6 +49,20 @@ export default function AudienceDetail() {
       setError(String(e));
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleCompute() {
+    if (!id) return;
+    setComputing(true);
+    setError(null);
+    try {
+      const updated = await computeAudience(id);
+      setAudience(updated);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setComputing(false);
     }
   }
 
@@ -103,6 +118,9 @@ export default function AudienceDetail() {
                 ← Back
               </Button>
             </Link>
+            <Button size="sm" onClick={handleCompute} disabled={computing}>
+              {computing ? "Computing…" : "Compute"}
+            </Button>
             <Button size="sm" variant="ghost" onClick={handleDelete} disabled={deleting}>
               {deleting ? "Deleting…" : "Delete"}
             </Button>
@@ -148,8 +166,9 @@ export default function AudienceDetail() {
               </Stack>
             </Inline>
             <Text size="body-sm" color="muted">
-              Compute path (spec → membership count → member rows) lands separately. The persisted
-              spec is the contract; running it is the next surface.
+              Compute runs the spec against the source substrate (DuckDB-on-R2 for the api-delta
+              glob in v1) and returns COUNT(DISTINCT {audience.entity_grain}). Re-run any time the
+              underlying data changes.
             </Text>
           </Stack>
         </Box>
