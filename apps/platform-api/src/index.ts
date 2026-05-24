@@ -19,6 +19,7 @@ import { allowedOrigins, env } from "./env.ts";
 import { requireUser, type AuthVariables } from "./auth.ts";
 import { samOppsRoutes } from "./routes/sam-opps.ts";
 import { campaignsRoutes } from "./routes/campaigns.ts";
+import { gtmPeopleRoutes } from "./routes/gtm-people.ts";
 
 const app = new Hono<{ Variables: AuthVariables & { requestId: string } }>();
 
@@ -45,6 +46,7 @@ app.get("/api/v1/me", requireUser, (c) => {
 
 app.route("/api/v1/sam-opps", samOppsRoutes);
 app.route("/api/v1/campaigns", campaignsRoutes);
+app.route("/api/v1/gtm/people", gtmPeopleRoutes);
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 // Bind explicitly to 0.0.0.0 so Railway's external healthcheck can reach

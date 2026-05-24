@@ -1,4 +1,4 @@
-import { ArrowUpRight, Crosshair, LayoutGrid, ListChecks, Sparkles } from "lucide-react";
+import { ArrowUpRight, Crosshair, LayoutGrid, ListChecks, Sparkles, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Card, Grid, Page, Stack, Text } from "@rare-structure-hq/ui";
@@ -38,6 +38,13 @@ const TOOLS: Tool[] = [
       "30-day contract winners across federal agencies. Filter by NAICS, agency, state, obligation.",
     icon: LayoutGrid,
     to: "/opportunities",
+  },
+  {
+    title: "Leads",
+    description:
+      "Read-only view over gtm.people across all sources (SFNET, exa, etc.). Filter by source.",
+    icon: Users,
+    to: "/leads",
   },
 ];
 
