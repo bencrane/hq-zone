@@ -109,3 +109,51 @@ export async function statsOpps(
   const json = await res.json();
   return json.data as StatsRow[];
 }
+
+// ────────────── Coverage card — meta-stats over R2 / RW / DEX ──────────────
+//
+// Backed by DEX GET /coverage/stats (which reads ops.coverage_stats — a
+// nightly-emitted Postgres table). Three scope buckets share a common
+// envelope shape, but the per-row `payload` differs by scope.
+
+export interface CoverageStatRow {
+  metric_name: string;
+  captured_at: string | null;
+  payload: CoverageStatPayload;
+}
+
+export interface CoverageStatPayload {
+  // Dataset rows (Pattern A — Lance source datasets)
+  row_count?: number;
+  last_version_ts?: string;
+  distinct_key_column?: string;
+  // Bridge rows (Pattern B — domain / UEI / etc. bridges)
+  match_method?: string;
+  distinct_keys_matched?: number;
+  tier_breakdown?: Record<string, number>;
+  // Intersection rows (YAML intersections — predicate chains over bridges)
+  predicate_chain?: string;
+  lance_datasets?: string[];
+  bridge?: string;
+  cohort_filter?: unknown;
+  count?: number;
+  match_rate?: number | null;
+  // Common across all scopes — surfaced when the emit run failed for a row.
+  error?: string;
+  // Lenient: emit script may add adjacent fields we want to render later.
+  [k: string]: unknown;
+}
+
+export interface CoverageStats {
+  datasets: CoverageStatRow[];
+  bridges: CoverageStatRow[];
+  intersections: CoverageStatRow[];
+}
+
+export async function getCoverageStats(): Promise<CoverageStats> {
+  const res = await fetch(`${API_BASE}/api/v1/coverage/stats`, {
+    headers: { Authorization: await bearer() },
+  });
+  if (!res.ok) throw new Error(`coverage stats failed: ${res.status} ${await res.text()}`);
+  return (await res.json()) as CoverageStats;
+}

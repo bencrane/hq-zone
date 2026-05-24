@@ -10,6 +10,7 @@ storybook-static
 .next
 *.tsbuildinfo
 coverage
+!apps/platform-app/src/coverage/
 .gstack/
 test-results
 playwright-report
