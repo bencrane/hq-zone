@@ -6,6 +6,7 @@ import {
   ListChecks,
   Send,
   Sparkles,
+  Target,
   Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -67,6 +68,13 @@ const TOOLS: Tool[] = [
       "Datasets, bridges, and intersections — what's joined to what, with row counts and predicate chains.",
     icon: Layers,
     to: "/coverage",
+  },
+  {
+    title: "Audiences",
+    description:
+      "Define deterministic cohorts over the data factory. Criteria specs are the contract — same spec, same query, every run.",
+    icon: Target,
+    to: "/audiences",
   },
 ];
 

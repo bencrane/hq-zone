@@ -17,10 +17,16 @@
  *   `/leads`                     → read-only view over gtm.people (auth).
  *   `/campaigns/new`             → full-page campaign builder (auth).
  *   `/coverage`                  → datasets / bridges / intersections (auth).
+ *   `/audiences`                 → list of authored audiences (auth).
+ *   `/audiences/new`             → audience builder form (auth).
+ *   `/audiences/:id`             → single audience detail (auth).
  */
 
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import AudienceBuilder from "./audiences/AudienceBuilder";
+import AudienceDetail from "./audiences/AudienceDetail";
+import AudiencesList from "./audiences/AudiencesList";
 import CampaignBuilder from "./campaigns/CampaignBuilder";
 import { HQBadge } from "./components/HQBadge";
 import CoveragePage from "./coverage/CoveragePage";
@@ -156,6 +162,30 @@ export function App() {
           element={
             <RequireAuth>
               <CoveragePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/audiences"
+          element={
+            <RequireAuth>
+              <AudiencesList />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/audiences/new"
+          element={
+            <RequireAuth>
+              <AudienceBuilder />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/audiences/:id"
+          element={
+            <RequireAuth>
+              <AudienceDetail />
             </RequireAuth>
           }
         />
