@@ -6,6 +6,7 @@
  * - /health (unauthenticated) for liveness probes
  * - /api/v1/me (auth-required) echoes the validated user
  * - /api/v1/sam-opps/* (auth-required) brokers to data-engine-x
+ * - /api/v1/coverage/stats (auth-required) brokers to data-engine-x
  *
  * Deferred: Recipient profile, project matching.
  */
@@ -19,6 +20,7 @@ import { allowedOrigins, env } from "./env.ts";
 import { requireUser, type AuthVariables } from "./auth.ts";
 import { samOppsRoutes } from "./routes/sam-opps.ts";
 import { campaignsRoutes } from "./routes/campaigns.ts";
+import { coverageRoutes } from "./routes/coverage.ts";
 import { gtmPeopleRoutes } from "./routes/gtm-people.ts";
 
 const app = new Hono<{ Variables: AuthVariables & { requestId: string } }>();
@@ -46,6 +48,7 @@ app.get("/api/v1/me", requireUser, (c) => {
 
 app.route("/api/v1/sam-opps", samOppsRoutes);
 app.route("/api/v1/campaigns", campaignsRoutes);
+app.route("/api/v1/coverage", coverageRoutes);
 app.route("/api/v1/gtm/people", gtmPeopleRoutes);
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;

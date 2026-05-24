@@ -16,12 +16,14 @@
  *   `/opportunities/:notice_id`  → single opportunity detail (auth).
  *   `/leads`                     → read-only view over gtm.people (auth).
  *   `/campaigns/new`             → full-page campaign builder (auth).
+ *   `/coverage`                  → datasets / bridges / intersections (auth).
  */
 
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import CampaignBuilder from "./campaigns/CampaignBuilder";
 import { HQBadge } from "./components/HQBadge";
+import CoveragePage from "./coverage/CoveragePage";
 import LeadsList from "./leads/LeadsList";
 import { AuthProvider, useAuth } from "./lib/auth";
 import ListDetail from "./lists/ListDetail";
@@ -146,6 +148,14 @@ export function App() {
           element={
             <RequireAuth>
               <CampaignBuilder />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/coverage"
+          element={
+            <RequireAuth>
+              <CoveragePage />
             </RequireAuth>
           }
         />

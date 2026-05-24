@@ -2,6 +2,7 @@ import {
   ArrowUpRight,
   Crosshair,
   LayoutGrid,
+  Layers,
   ListChecks,
   Send,
   Sparkles,
@@ -59,6 +60,13 @@ const TOOLS: Tool[] = [
       "Build an outbound campaign end-to-end: pick a list, author the message, and enroll into hq-x.",
     icon: Send,
     to: "/campaigns/new",
+  },
+  {
+    title: "Coverage",
+    description:
+      "Datasets, bridges, and intersections — what's joined to what, with row counts and predicate chains.",
+    icon: Layers,
+    to: "/coverage",
   },
 ];
 
