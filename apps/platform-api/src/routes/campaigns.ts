@@ -40,14 +40,21 @@ const RecipientInput = z.object({
 const EnrollListBody = z.object({
   campaign_name: z.string().min(1).max(200),
   // Channel/provider whitelist mirrors VALID_CHANNEL_PROVIDER_PAIRS in
-  // apps/hq-x/app/models/campaigns.py. The dialog's selects already
-  // pre-pair these; we re-validate here so a hand-crafted curl can't
-  // smuggle a bad combo through.
+  // apps/hq-x/app/models/campaigns.py. The UI selects already pre-pair
+  // these; we re-validate here so a hand-crafted curl can't smuggle a
+  // bad combo through.
   channel: z.enum(["email", "direct_mail", "voice_outbound", "sms"]).default("email"),
   provider: z.enum(["emailbison", "lob", "twilio", "vapi", "manual"]).default("emailbison"),
   step_name: z.string().min(1).max(200).optional(),
   source_label: z.string().max(200).optional(),
   recipients: z.array(RecipientInput).min(1).max(10_000),
+  // Operator-authored content for the first step. hq-x reads this from
+  // channel_specific_config at send time. For email/manual mode, the
+  // expected keys are subject + body_text + body_html (per
+  // ChannelCampaignStepContentMode docs in hq-x/app/models/campaigns.py).
+  email_subject: z.string().max(200).optional(),
+  email_body_text: z.string().max(50_000).optional(),
+  email_body_html: z.string().max(200_000).optional(),
 });
 
 type EnrollListPayload = z.infer<typeof EnrollListBody>;
@@ -63,6 +70,14 @@ interface EnrollResult {
 }
 
 async function callBackendEnrollList(p: EnrollListPayload, userId: string): Promise<EnrollResult> {
+  // Channel-specific step content. For email/manual mode hq-x reads
+  // {subject, body_text, body_html} from channel_specific_config at
+  // send time and runs a simple {first_name}-style substitution.
+  const channelSpecificConfig: Record<string, string> = {};
+  if (p.email_subject) channelSpecificConfig.subject = p.email_subject;
+  if (p.email_body_text) channelSpecificConfig.body_text = p.email_body_text;
+  if (p.email_body_html) channelSpecificConfig.body_html = p.email_body_html;
+
   const upstreamBody = {
     organization_id: env.HX_DEFAULT_ORG_ID,
     brand_id: env.HX_DEFAULT_BRAND_ID,
@@ -71,6 +86,9 @@ async function callBackendEnrollList(p: EnrollListPayload, userId: string): Prom
     provider: p.provider,
     ...(p.step_name ? { step_name: p.step_name } : {}),
     ...(p.source_label ? { source_label: p.source_label } : {}),
+    ...(Object.keys(channelSpecificConfig).length > 0
+      ? { channel_specific_config: channelSpecificConfig }
+      : {}),
     metadata: {
       created_by_user_id: userId,
       source: "hq_zone/platform-api",
