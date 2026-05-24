@@ -20,6 +20,11 @@ const envSchema = z.object({
   // BFF identity; the user's JWT propagates as X-User-Bearer.
   BACKEND_X_API_URL: z.string().url(),
   BACKEND_X_SERVICE_TOKEN: z.string().min(1),
+  // Org + brand under which hq-zone-originated campaigns land in hq-x.
+  // Both rows already exist in hq-x (business.organizations + business.brands)
+  // and are referenced by every BFF enroll-list call.
+  HX_DEFAULT_ORG_ID: z.string().uuid(),
+  HX_DEFAULT_BRAND_ID: z.string().uuid(),
   ALLOWED_ORIGINS: z.string().default("http://localhost:5173"),
   APP_ENV: z.enum(["prd", "stg", "dev"]),
 });
@@ -29,6 +34,8 @@ const parsed = envSchema.safeParse({
   SUPABASE_ISSUER: process.env.SUPABASE_ISSUER,
   BACKEND_X_API_URL: process.env.BACKEND_X_API_URL,
   BACKEND_X_SERVICE_TOKEN: process.env.BACKEND_X_SERVICE_TOKEN,
+  HX_DEFAULT_ORG_ID: process.env.HX_DEFAULT_ORG_ID,
+  HX_DEFAULT_BRAND_ID: process.env.HX_DEFAULT_BRAND_ID,
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
   APP_ENV: process.env.APP_ENV,
 });
