@@ -6,7 +6,7 @@
  * - /health (unauthenticated) for liveness probes
  * - /api/v1/me (auth-required) echoes the validated user
  * - /api/v1/sam-opps/* (auth-required) brokers to data-engine-x
- * - /api/v1/coverage/stats (auth-required) brokers to data-engine-x
+ * - /api/v1/coverage/stats (auth-required) brokers to hq-x
  *
  * Deferred: Recipient profile, project matching.
  */
