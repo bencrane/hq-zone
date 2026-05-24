@@ -14,6 +14,7 @@
  *   `/lists/:list_id`            → single list detail (auth).
  *   `/opportunities`             → SAM.gov active opportunities list (auth).
  *   `/opportunities/:notice_id`  → single opportunity detail (auth).
+ *   `/leads`                     → read-only view over gtm.people (auth).
  */
 
 import { Navigate, Route, Routes } from "react-router-dom";
@@ -31,6 +32,7 @@ import ListsOverview from "./lists/ListsOverview";
 import ListDetail from "./lists/ListDetail";
 import TableView from "./tables/TableView";
 import FindCompaniesRoute from "./tables/FindCompaniesRoute";
+import LeadsList from "./leads/LeadsList";
 import WorkbooksIndex from "./workbooks/WorkbooksIndex";
 import WorkbookDetail from "./workbooks/WorkbookDetail";
 
@@ -126,6 +128,14 @@ export function App() {
           element={
             <RequireAuth>
               <OppDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/leads"
+          element={
+            <RequireAuth>
+              <LeadsList />
             </RequireAuth>
           }
         />
