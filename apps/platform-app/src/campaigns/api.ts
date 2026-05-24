@@ -35,6 +35,12 @@ export interface EnrollListPayload {
   step_name?: string;
   source_label?: string;
   recipients: EnrollRecipientInput[];
+  // Operator-authored email step content. Stored on the step's
+  // channel_specific_config; rendered at send time with simple
+  // {first_name}-style substitution.
+  email_subject?: string;
+  email_body_text?: string;
+  email_body_html?: string;
 }
 
 export interface EnrollListResult {

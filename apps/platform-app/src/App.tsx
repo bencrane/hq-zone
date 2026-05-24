@@ -15,26 +15,28 @@
  *   `/opportunities`             → SAM.gov active opportunities list (auth).
  *   `/opportunities/:notice_id`  → single opportunity detail (auth).
  *   `/leads`                     → read-only view over gtm.people (auth).
+ *   `/campaigns/new`             → full-page campaign builder (auth).
  */
 
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import CampaignBuilder from "./campaigns/CampaignBuilder";
 import { HQBadge } from "./components/HQBadge";
+import LeadsList from "./leads/LeadsList";
+import { AuthProvider, useAuth } from "./lib/auth";
+import ListDetail from "./lists/ListDetail";
+import ListsOverview from "./lists/ListsOverview";
+import OppDetail from "./opportunities/OppDetail";
+import OppsList from "./opportunities/OppsList";
+import { SignIn } from "./opportunities/SignIn";
 import Home from "./routes/Home";
 import MapDemo from "./routes/MapDemo";
-import { AuthProvider, useAuth } from "./lib/auth";
-import { SignIn } from "./opportunities/SignIn";
-import OppsList from "./opportunities/OppsList";
-import OppDetail from "./opportunities/OppDetail";
-import TamList from "./tam/TamList";
-import TamDetail from "./tam/TamDetail";
-import ListsOverview from "./lists/ListsOverview";
-import ListDetail from "./lists/ListDetail";
-import TableView from "./tables/TableView";
 import FindCompaniesRoute from "./tables/FindCompaniesRoute";
-import LeadsList from "./leads/LeadsList";
-import WorkbooksIndex from "./workbooks/WorkbooksIndex";
+import TableView from "./tables/TableView";
+import TamDetail from "./tam/TamDetail";
+import TamList from "./tam/TamList";
 import WorkbookDetail from "./workbooks/WorkbookDetail";
+import WorkbooksIndex from "./workbooks/WorkbooksIndex";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
@@ -136,6 +138,14 @@ export function App() {
           element={
             <RequireAuth>
               <LeadsList />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/campaigns/new"
+          element={
+            <RequireAuth>
+              <CampaignBuilder />
             </RequireAuth>
           }
         />

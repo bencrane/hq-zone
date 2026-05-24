@@ -1,4 +1,12 @@
-import { ArrowUpRight, Crosshair, LayoutGrid, ListChecks, Sparkles, Users } from "lucide-react";
+import {
+  ArrowUpRight,
+  Crosshair,
+  LayoutGrid,
+  ListChecks,
+  Send,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Card, Grid, Page, Stack, Text } from "@rare-structure-hq/ui";
@@ -27,8 +35,7 @@ const TOOLS: Tool[] = [
   },
   {
     title: "Lists",
-    description:
-      "Saved lead lists. Manage members and hand off to hq-x campaigns.",
+    description: "Saved lead lists. Manage members and hand off to hq-x campaigns.",
     icon: ListChecks,
     to: "/lists",
   },
@@ -45,6 +52,13 @@ const TOOLS: Tool[] = [
       "Read-only view over gtm.people across all sources (SFNET, exa, etc.). Filter by source.",
     icon: Users,
     to: "/leads",
+  },
+  {
+    title: "Campaigns",
+    description:
+      "Build an outbound campaign end-to-end: pick a list, author the message, and enroll into hq-x.",
+    icon: Send,
+    to: "/campaigns/new",
   },
 ];
 
