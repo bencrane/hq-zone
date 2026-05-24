@@ -63,6 +63,19 @@ export async function deleteAudience(id: string): Promise<void> {
   await jsonOrThrow<{ deleted: string }>(res);
 }
 
+export async function computeAudience(id: string): Promise<Audience> {
+  const res = await fetch(`${API_BASE}/api/v1/audiences/${id}/compute`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: await bearer(),
+    },
+    body: "{}",
+  });
+  const body = await jsonOrThrow<{ audience: Audience }>(res);
+  return body.audience;
+}
+
 export async function listSourceCatalog(): Promise<AudienceSourceCatalogEntry[]> {
   const res = await fetch(`${API_BASE}/api/v1/audiences/catalog/sources`, {
     headers: { Authorization: await bearer() },
