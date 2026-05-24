@@ -3,12 +3,13 @@
  * full recipient batch to the platform-api orchestrator.
  *
  * Caller supplies the recipients (already-resolved person rows). The
- * dialog handles campaign metadata + channel choice + brand pick. On
- * success it shows the synthetic campaign_id (today) or real one (when
- * BFF flips to live mode).
+ * dialog handles campaign metadata + channel choice. Brand + org are
+ * resolved server-side from Doppler (single-operator model), so the
+ * dialog doesn't need a brand picker today.
  */
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,14 +18,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  enrollList,
-  type EnrollListResult,
-  type EnrollRecipientInput,
-} from "./api";
+import { type EnrollListResult, type EnrollRecipientInput, enrollList } from "./api";
 
 interface SendToCampaignDialogProps {
   open: boolean;
@@ -32,7 +28,6 @@ interface SendToCampaignDialogProps {
   recipients: EnrollRecipientInput[];
   sourceLabel: string;
   defaultCampaignName?: string;
-  defaultBrandId?: string;
 }
 
 export function SendToCampaignDialog({
@@ -41,17 +36,15 @@ export function SendToCampaignDialog({
   recipients,
   sourceLabel,
   defaultCampaignName,
-  defaultBrandId,
 }: SendToCampaignDialogProps) {
   const [campaignName, setCampaignName] = useState(defaultCampaignName ?? "");
-  const [brandId, setBrandId] = useState(defaultBrandId ?? "");
   const [stepName, setStepName] = useState("Step 1");
   const [channel, setChannel] = useState<"email" | "direct_mail" | "voice_outbound" | "sms">(
     "email",
   );
-  const [provider, setProvider] = useState<
-    "emailbison" | "lob" | "twilio" | "vapi" | "manual"
-  >("emailbison");
+  const [provider, setProvider] = useState<"emailbison" | "lob" | "twilio" | "vapi" | "manual">(
+    "emailbison",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<EnrollListResult | null>(null);
@@ -59,14 +52,13 @@ export function SendToCampaignDialog({
   useEffect(() => {
     if (!open) return;
     setCampaignName(defaultCampaignName ?? "");
-    setBrandId(defaultBrandId ?? "");
     setStepName("Step 1");
     setChannel("email");
     setProvider("emailbison");
     setErr(null);
     setResult(null);
     setSubmitting(false);
-  }, [open, defaultCampaignName, defaultBrandId]);
+  }, [open, defaultCampaignName]);
 
   // Keep provider sensible when channel changes.
   useEffect(() => {
@@ -76,11 +68,7 @@ export function SendToCampaignDialog({
     else if (channel === "sms") setProvider("twilio");
   }, [channel]);
 
-  const canSubmit =
-    campaignName.trim().length > 0 &&
-    brandId.trim().length > 0 &&
-    recipients.length > 0 &&
-    !submitting;
+  const canSubmit = campaignName.trim().length > 0 && recipients.length > 0 && !submitting;
 
   async function handleSubmit() {
     if (!canSubmit) return;
@@ -90,7 +78,6 @@ export function SendToCampaignDialog({
     try {
       const r = await enrollList({
         campaign_name: campaignName.trim(),
-        brand_id: brandId.trim(),
         channel,
         provider,
         step_name: stepName.trim() || "Step 1",
@@ -119,21 +106,15 @@ export function SendToCampaignDialog({
         {result ? (
           <div className="space-y-3 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
             <div className="text-emerald-300">
-              {result.mode === "stub" ? "Enrolled (stub mode)" : "Enrolled"} —{" "}
-              {result.recipient_count} {result.recipient_count === 1 ? "person" : "people"}.
+              Enrolled — {result.recipient_count}{" "}
+              {result.recipient_count === 1 ? "person" : "people"} ({result.recipients_new} new,{" "}
+              {result.recipients_existing} existing).
             </div>
             <div className="space-y-1 font-mono text-xs text-white/70">
               <div>campaign_id: {result.campaign_id}</div>
               <div>channel_campaign_id: {result.channel_campaign_id}</div>
               <div>step_id: {result.step_id}</div>
             </div>
-            {result.mode === "stub" && (
-              <div className="text-xs text-white/50">
-                hq-x integration is stubbed in the BFF today; payload sequence logged to
-                platform-api console. Live mode flips when hq-x exposes the recipient
-                bulk-attach endpoint.
-              </div>
-            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -146,19 +127,6 @@ export function SendToCampaignDialog({
                 placeholder="e.g. Q3 outbound — defense primes"
                 autoFocus
               />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="brand-id">Brand ID (hq-x)</Label>
-              <Input
-                id="brand-id"
-                value={brandId}
-                onChange={(e) => setBrandId(e.target.value)}
-                placeholder="00000000-0000-0000-0000-000000000000"
-              />
-              <div className="text-xs text-white/40">
-                UUID of the hq-x brand to bind this campaign to. (Future: brand picker.)
-              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">

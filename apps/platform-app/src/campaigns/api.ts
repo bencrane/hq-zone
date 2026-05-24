@@ -1,10 +1,9 @@
 /**
- * Campaigns BFF client. POSTs to platform-api which orchestrates
- * against hq-x.
+ * Campaigns BFF client. POSTs to platform-api which calls hq-x's atomic
+ * BFF enroll endpoint (apps/hq-x/app/routers/bff_campaigns.py).
  *
- * Currently the BFF route is stubbed (logs the hq-x payload sequence and
- * returns synthetic ids). The shape here matches the live contract so the
- * UI doesn't change when the BFF flips to live.
+ * Org + brand are resolved in the BFF from Doppler — the UI passes the
+ * campaign config + lead list and gets back the created hq-x ids.
  */
 import { supabase } from "@/lib/supabase";
 
@@ -19,18 +18,18 @@ async function bearer(): Promise<string> {
 
 export interface EnrollRecipientInput {
   external_id: string;
-  display_name: string;
+  display_name?: string | null;
   email?: string | null;
   phone?: string | null;
   person_state?: string | null;
   person_locality?: string | null;
   external_source?: string;
+  recipient_type?: "business" | "property" | "person" | "other";
   metadata?: Record<string, unknown>;
 }
 
 export interface EnrollListPayload {
   campaign_name: string;
-  brand_id: string;
   channel?: "email" | "direct_mail" | "voice_outbound" | "sms";
   provider?: "emailbison" | "lob" | "twilio" | "vapi" | "manual";
   step_name?: string;
@@ -39,12 +38,13 @@ export interface EnrollListPayload {
 }
 
 export interface EnrollListResult {
-  mode: "stub" | "live";
   campaign_id: string;
   channel_campaign_id: string;
   step_id: string;
   recipient_count: number;
-  would_send?: unknown;
+  recipients_new: number;
+  recipients_existing: number;
+  memberships_created: number;
 }
 
 export async function enrollList(payload: EnrollListPayload): Promise<EnrollListResult> {
