@@ -1,20 +1,20 @@
 /**
- * coverage broker — forwards authenticated read requests to
- * data-engine-x's /coverage/stats endpoint.
+ * coverage broker — forwards authenticated read requests to hq-x's
+ * /api/v1/coverage/stats passthrough, which proxies on to data-engine-x.
  *
- * Unlike sam-opps/gtm-people which route through backend-engine, the
- * Coverage card consumes DEX directly: the data is operator-grade
- * meta-coverage stats (datasets / bridges / intersections), so there's
- * no per-user scoping to do downstream. requireUser still gates the
- * call at the BFF — only signed-in operators can hit the route.
+ * Mirrors the sam-opps / gtm-people pattern: platform-app sends the
+ * user's Supabase access_token; `requireUser` validates it on this side.
+ * We call hq-x with the BFF service token as the Authorization header
+ * and forward the user JWT as `X-User-Bearer`.
  *
  * Routes:
- *   GET /stats → DEX GET /coverage/stats
+ *   GET /stats → hq-x GET /api/v1/coverage/stats
  *
- * DEX response status + body are passed through verbatim.
+ * hq-x response status + body are passed through verbatim.
  */
 
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 
 import { env } from "../env.ts";
 import { requireUser, type AuthVariables } from "../auth.ts";
@@ -23,15 +23,32 @@ export const coverageRoutes = new Hono<{ Variables: AuthVariables }>();
 
 coverageRoutes.use("*", requireUser);
 
+function userBearerFromRequest(c: { req: { header: (k: string) => string | undefined } }): string {
+  // requireUser already validated the header; re-extract for forwarding.
+  const authHeader = c.req.header("authorization") ?? c.req.header("Authorization");
+  if (!authHeader) {
+    throw new HTTPException(401, { message: "Missing bearer token (post-auth)" });
+  }
+  return authHeader;
+}
+
+function backendHeaders(c: { req: { header: (k: string) => string | undefined } }) {
+  return {
+    Authorization: `Bearer ${env.BACKEND_X_SERVICE_TOKEN}`,
+    "X-User-Bearer": userBearerFromRequest(c),
+  };
+}
+
 coverageRoutes.get("/stats", async (c) => {
-  const res = await fetch(`${env.DEX_API_URL}/coverage/stats`, {
-    headers: { Authorization: `Bearer ${env.DEX_SERVICE_TOKEN}` },
+  const url = `${env.BACKEND_X_API_URL}/api/v1/coverage/stats`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: backendHeaders(c),
   });
   const text = await res.text();
+  const contentType = res.headers.get("content-type") ?? "application/json";
   return new Response(text, {
     status: res.status,
-    headers: {
-      "content-type": res.headers.get("content-type") ?? "application/json",
-    },
+    headers: { "content-type": contentType },
   });
 });
