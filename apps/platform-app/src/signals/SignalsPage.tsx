@@ -20,6 +20,7 @@ import {
 import {
   deleteGtmSignal,
   fireGtmSignal,
+  fireGtmSignalStatus,
   getGtmSignals,
   patchGtmSignal,
   type GtmSignal,
@@ -463,7 +464,26 @@ function SignalRow({
     if (!ok) return;
     setFiring(true); setFireError(null); setFireResult(null);
     try {
-      const result = await fireGtmSignal(sig.signal_slug, limit === null ? {} : { limit });
+      // POST /fire returns immediately with a call_id (Modal .spawn under the
+      // hood — no more 30s-timeout split-brain). Then poll /fire/status/:id
+      // until status === "done" or the safety cap fires. 2s interval, 5min cap
+      // covers even wide-window 1y-of-FPDS queries that take ~60s end-to-end.
+      const spawn = await fireGtmSignal(sig.signal_slug, limit === null ? {} : { limit });
+      const POLL_INTERVAL_MS = 2000;
+      const MAX_POLL_MS = 5 * 60 * 1000;
+      const deadline = Date.now() + MAX_POLL_MS;
+      let result: GtmSignalFireResult | null = null;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+        const status = await fireGtmSignalStatus(spawn.call_id);
+        if (status.status === "done") {
+          result = status.result;
+          break;
+        }
+      }
+      if (result === null) {
+        throw new Error(`fire still pending after ${MAX_POLL_MS / 1000}s — check Modal dashboard for call_id ${spawn.call_id}`);
+      }
       setFireResult(result);
     } catch (e) {
       setFireError(e instanceof Error ? e.message : "fire failed");
