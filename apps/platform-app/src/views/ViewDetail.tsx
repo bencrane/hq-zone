@@ -180,7 +180,17 @@ export default function ViewDetail() {
               </Stack>
               <Stack gap="1">
                 <Text size="mono-xs" color="muted">
-                  MATERIALIZED ROWS
+                  ENTITIES (DISTINCT)
+                </Text>
+                <Text size="body-md" className="font-mono">
+                  {view.entity_count === null
+                    ? "— (not yet materialized)"
+                    : view.entity_count.toLocaleString()}
+                </Text>
+              </Stack>
+              <Stack gap="1">
+                <Text size="mono-xs" color="muted">
+                  ACTION ROWS
                 </Text>
                 <Text size="body-md" className="font-mono">
                   {view.row_count === null
@@ -210,7 +220,9 @@ export default function ViewDetail() {
               <strong>Compute</strong> runs COUNT(DISTINCT {view.entity_grain}) on the substrate —
               fast, cheap, no side effect. <strong>Materialize</strong> emits a Lance dataset (BTREE
               on {view.entity_grain}, registered in Polaris under the <code>views</code> namespace)
-              that other views can use as a source.
+              with the PK + all source-catalog fields — so derived views can filter by any of those
+              columns without going back to the raw source. Action rows ≥ entities when criteria
+              don't collapse to one action per entity (e.g., 365d windows).
             </Text>
           </Stack>
         </Box>
