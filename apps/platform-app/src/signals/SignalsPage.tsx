@@ -6,10 +6,10 @@
  * with revert-on-error.
  */
 import {
-  Badge, Box, Button, Callout, Code, Flex, IconButton, SegmentedControl,
-  Table, Text, TextField, Tooltip,
+  Badge, Box, Button, Callout, Code, DropdownMenu, Flex, IconButton,
+  SegmentedControl, Table, Text, TextField, Tooltip,
 } from "@radix-ui/themes";
-import { Check, Loader2, Pencil, Trash2, X } from "lucide-react";
+import { Check, Loader2, Pencil, Play, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -19,9 +19,11 @@ import {
 
 import {
   deleteGtmSignal,
+  fireGtmSignal,
   getGtmSignals,
   patchGtmSignal,
   type GtmSignal,
+  type GtmSignalFireResult,
   type GtmSignalPatch,
   type GtmSignalsResponse,
   type WebhookTarget,
@@ -195,25 +197,78 @@ function TargetCell({
 }
 
 /**
- * RowActions — single action column. Display: pencil + trash. Edit: save +
- * cancel + trash. Save is disabled when there are no pending changes.
+ * FireResult — inline summary of the last manual fire for this row. Renders
+ * directly below the action buttons so the operator sees the outcome without
+ * leaving the table. Shape mirrors GtmSignalFireResult.
  */
+function FireResultBadge({ result }: { result: GtmSignalFireResult }) {
+  const dispatch = result.dispatch;
+  const isHttp = typeof dispatch.status === "number";
+  const ok = isHttp && (dispatch.status as number) >= 200 && (dispatch.status as number) < 300;
+  const color = ok ? "green" : "red";
+  const statusText = isHttp
+    ? `HTTP ${dispatch.status}`
+    : `${dispatch.status}${dispatch.exception_type ? ` (${dispatch.exception_type})` : ""}`;
+  const rowText = result.limit_applied !== null
+    ? `${result.sent_rows} of ${result.matched_rows_total} rows`
+    : `${result.sent_rows} rows`;
+  return (
+    <Flex direction="column" gap="1" align="end">
+      <Badge color={color} variant="soft" radius="full" size="1">
+        → {result.webhook_target} · {statusText} · {rowText} · {dispatch.elapsed_ms}ms
+      </Badge>
+      {!ok && dispatch.exception ? (
+        <Text size="1" color="red" style={{ maxWidth: 220, textAlign: "right" }}>
+          {dispatch.exception}
+        </Text>
+      ) : null}
+    </Flex>
+  );
+}
+
+/**
+ * RowActions — single action column. Display: fire-menu + pencil + trash.
+ * Edit: save + cancel + trash. Save is disabled when there are no pending
+ * changes. Fire is disabled while editing (no point firing draft state).
+ * The fire dropdown lets the operator pick N (1 / 10 / 50 / 100 / all)
+ * for the payload that goes to n8n — None = same as production cron.
+ */
+const FIRE_PRESETS: Array<{ label: string; limit: number | null }> = [
+  { label: "Send 1 row",     limit: 1 },
+  { label: "Send 10 rows",   limit: 10 },
+  { label: "Send 50 rows",   limit: 50 },
+  { label: "Send 100 rows",  limit: 100 },
+];
+
 function RowActions({
-  editing, saving, deleting, hasChanges, error,
-  onEdit, onSave, onCancel, onDelete,
+  editing, saving, deleting, firing, hasChanges, error, fireError, fireResult,
+  webhookTarget, hasTargetUrl,
+  onEdit, onSave, onCancel, onDelete, onFire,
 }: {
   editing: boolean;
   saving: boolean;
   deleting: boolean;
+  firing: boolean;
   hasChanges: boolean;
   error: string | null;
+  fireError: string | null;
+  fireResult: GtmSignalFireResult | null;
+  webhookTarget: WebhookTarget;
+  hasTargetUrl: boolean;
   onEdit: () => void;
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  onFire: (limit: number | null) => void;
 }) {
+  const fireDisabled = firing || editing || !hasTargetUrl;
+  const fireTooltip = !hasTargetUrl
+    ? `webhook_${webhookTarget}_url is empty — set it before firing`
+    : editing
+      ? "Save or cancel edits before firing"
+      : `Fire signal → ${webhookTarget} URL`;
   return (
-    <Flex direction="column" gap="1" align="end">
+    <Flex direction="column" gap="2" align="end">
       <Flex gap="1" align="center">
         {editing ? (
           <>
@@ -239,15 +294,44 @@ function RowActions({
             </Tooltip>
           </>
         ) : (
-          <Tooltip content="Edit signal">
-            <IconButton
-              size="1" variant="ghost" color="gray"
-              onClick={onEdit}
-              aria-label="Edit signal"
-            >
-              <Pencil size={14} />
-            </IconButton>
-          </Tooltip>
+          <>
+            <DropdownMenu.Root>
+              <Tooltip content={fireTooltip}>
+                <DropdownMenu.Trigger disabled={fireDisabled}>
+                  <IconButton
+                    size="1" variant="ghost" color="blue"
+                    disabled={fireDisabled}
+                    aria-label="Fire signal"
+                  >
+                    {firing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                  </IconButton>
+                </DropdownMenu.Trigger>
+              </Tooltip>
+              <DropdownMenu.Content>
+                <DropdownMenu.Label>
+                  Fire → {webhookTarget} URL
+                </DropdownMenu.Label>
+                {FIRE_PRESETS.map((p) => (
+                  <DropdownMenu.Item key={p.label} onClick={() => onFire(p.limit)}>
+                    {p.label}
+                  </DropdownMenu.Item>
+                ))}
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item color="red" onClick={() => onFire(null)}>
+                  Send all matched rows (production cron parity)
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+            <Tooltip content="Edit signal">
+              <IconButton
+                size="1" variant="ghost" color="gray"
+                onClick={onEdit}
+                aria-label="Edit signal"
+              >
+                <Pencil size={14} />
+              </IconButton>
+            </Tooltip>
+          </>
         )}
         <Tooltip content="Delete signal">
           <IconButton
@@ -261,6 +345,8 @@ function RowActions({
         </Tooltip>
       </Flex>
       {error ? <Text size="1" color="red">{error}</Text> : null}
+      {fireError ? <Text size="1" color="red" style={{ maxWidth: 220, textAlign: "right" }}>{fireError}</Text> : null}
+      {fireResult ? <FireResultBadge result={fireResult} /> : null}
     </Flex>
   );
 }
@@ -281,7 +367,10 @@ function SignalRow({
   const [draft, setDraft] = useState<GtmSignalPatch>({});
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [firing, setFiring] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fireError, setFireError] = useState<string | null>(null);
+  const [fireResult, setFireResult] = useState<GtmSignalFireResult | null>(null);
 
   // If the row identity changes under us (rare — e.g. reload), drop the draft.
   useEffect(() => { setDraft({}); setError(null); }, [sig.signal_slug]);
@@ -290,6 +379,9 @@ function SignalRow({
   const prodUrl = (draft.webhook_prod_url ?? sig.webhook_prod_url) as string;
   const target  = (draft.webhook_target ?? sig.webhook_target) as WebhookTarget;
   const hasChanges = Object.keys(draft).length > 0;
+  // Fire uses the *server* target/URL, not the draft — operator should save
+  // edits before firing to avoid surprises ("did this fire test or prod?").
+  const serverTargetUrl = sig.webhook_target === "prod" ? sig.webhook_prod_url : sig.webhook_test_url;
 
   const handleEdit   = () => { setError(null); setEditing(true); };
   const handleCancel = () => { setDraft({}); setError(null); setEditing(false); };
@@ -315,6 +407,25 @@ function SignalRow({
     setDeleting(true);
     try { await onDelete(sig.signal_slug); }
     finally { setDeleting(false); }
+  };
+  const handleFire = async (limit: number | null) => {
+    const label = limit === null ? "all matched rows" : `${limit} rows`;
+    const ok = window.confirm(
+      `Fire signal ${sig.signal_slug} now?\n\n` +
+      `→ ${sig.webhook_target.toUpperCase()} URL\n` +
+      `→ ${label}\n\n` +
+      `This shuttles to Modal and POSTs a real payload (same as the daily cron).`,
+    );
+    if (!ok) return;
+    setFiring(true); setFireError(null); setFireResult(null);
+    try {
+      const result = await fireGtmSignal(sig.signal_slug, limit === null ? {} : { limit });
+      setFireResult(result);
+    } catch (e) {
+      setFireError(e instanceof Error ? e.message : "fire failed");
+    } finally {
+      setFiring(false);
+    }
   };
 
   return (
@@ -348,12 +459,18 @@ function SignalRow({
           editing={editing}
           saving={saving}
           deleting={deleting}
+          firing={firing}
           hasChanges={hasChanges}
           error={error}
+          fireError={fireError}
+          fireResult={fireResult}
+          webhookTarget={sig.webhook_target}
+          hasTargetUrl={Boolean(serverTargetUrl)}
           onEdit={handleEdit}
           onSave={handleSave}
           onCancel={handleCancel}
           onDelete={handleDelete}
+          onFire={handleFire}
         />
       </Table.Cell>
     </Table.Row>
