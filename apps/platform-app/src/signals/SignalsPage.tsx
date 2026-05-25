@@ -360,7 +360,6 @@ function RowActions({
                 size="2" variant="ghost" color="red"
                 disabled={deleting || editing}
                 aria-label="Delete signal"
-                style={{ marginLeft: 4 }}
               >
                 {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
               </IconButton>
@@ -545,14 +544,21 @@ function SignalsTable({
     <Table.Root variant="surface" size="3" className="signals-table">
       <Table.Header>
         <Table.Row>
+          {/* Column widths sum to 100% — kept here so the rebalance is
+              visible at a glance. Action column needs ~13% to fit three
+              size-2 IconButtons + the vertical divider between the
+              primary-actions group and Delete (Play|Pencil divider Trash).
+              Stole that width from the two URL columns (they ellipsis-
+              truncate already, so dropping each from 16%→14% is invisible
+              at typical viewport widths). */}
           <Table.ColumnHeaderCell width="11%">Signal Slug</Table.ColumnHeaderCell>
           <Table.ColumnHeaderCell width="6%">Status</Table.ColumnHeaderCell>
           <Table.ColumnHeaderCell width="15%">Target</Table.ColumnHeaderCell>
           <Table.ColumnHeaderCell width="21%">Criteria</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="16%">Webhook Test URL</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="16%">Webhook Prod URL</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="7%">Fires</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="8%">{""}</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="14%">Webhook Test URL</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="14%">Webhook Prod URL</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="6%">Fires</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="13%">{""}</Table.ColumnHeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>
