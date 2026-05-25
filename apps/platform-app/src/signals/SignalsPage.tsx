@@ -4,7 +4,7 @@
  * no live joins. Each row reports slug, status badge, spine target, criteria
  * (as a structured key/value list), and a truncated webhook URL.
  */
-import { Badge, Box, Callout, Code, Flex, Stack as RxStack, Table, Text, Tooltip } from "@radix-ui/themes";
+import { Badge, Box, Callout, Code, Flex, Table, Text, Tooltip } from "@radix-ui/themes";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -53,7 +53,7 @@ function CriteriaCell({ criteria }: { criteria: Record<string, unknown> }) {
     );
   }
   return (
-    <RxStack gap="1">
+    <Flex direction="column" gap="1">
       {entries.map(([k, v]) => {
         const label = KNOWN_KEY_LABELS[k] ?? k;
         let value: React.ReactNode;
@@ -107,7 +107,7 @@ function CriteriaCell({ criteria }: { criteria: Record<string, unknown> }) {
           </Flex>
         );
       })}
-    </RxStack>
+    </Flex>
   );
 }
 
