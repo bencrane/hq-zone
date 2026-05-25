@@ -164,11 +164,15 @@ export async function getCoverageStats(): Promise<CoverageStats> {
 // well-known keys (time_window_hours, min_obligated_usd, award_types, action_types)
 // and renders unknown keys as raw JSON.
 
+export type WebhookTarget = "test" | "prod";
+
 export interface GtmSignal {
   signal_slug: string;
   spine_target: string;
   criteria: Record<string, unknown>;
-  n8n_webhook_url: string;
+  webhook_test_url: string;
+  webhook_prod_url: string;
+  webhook_target: WebhookTarget;
   is_active: boolean;
   created_at: string | null;
   updated_at: string | null;
@@ -178,10 +182,50 @@ export interface GtmSignalsResponse {
   signals: GtmSignal[];
 }
 
+export interface GtmSignalEnvelope {
+  signal: GtmSignal;
+}
+
+export interface GtmSignalPatch {
+  webhook_test_url?: string;
+  webhook_prod_url?: string;
+  webhook_target?: WebhookTarget;
+  is_active?: boolean;
+}
+
 export async function getGtmSignals(): Promise<GtmSignalsResponse> {
   const res = await fetch(`${API_BASE}/api/v1/signals`, {
     headers: { Authorization: await bearer() },
   });
   if (!res.ok) throw new Error(`signals fetch failed: ${res.status} ${await res.text()}`);
   return (await res.json()) as GtmSignalsResponse;
+}
+
+export async function patchGtmSignal(
+  signalSlug: string,
+  patch: GtmSignalPatch,
+): Promise<GtmSignal> {
+  const res = await fetch(`${API_BASE}/api/v1/signals/${encodeURIComponent(signalSlug)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: await bearer(),
+    },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    throw new Error(`signal patch failed: ${res.status} ${await res.text()}`);
+  }
+  const env = (await res.json()) as GtmSignalEnvelope;
+  return env.signal;
+}
+
+export async function deleteGtmSignal(signalSlug: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/signals/${encodeURIComponent(signalSlug)}`, {
+    method: "DELETE",
+    headers: { Authorization: await bearer() },
+  });
+  if (!res.ok) {
+    throw new Error(`signal delete failed: ${res.status} ${await res.text()}`);
+  }
 }
