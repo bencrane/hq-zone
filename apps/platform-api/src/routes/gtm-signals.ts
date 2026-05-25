@@ -8,9 +8,10 @@
  * and forward the user JWT as `X-User-Bearer`.
  *
  * Routes:
- *   GET    /         → hq-x GET    /api/v1/signals
- *   PATCH  /:slug    → hq-x PATCH  /api/v1/signals/:slug   (webhook URLs / target / is_active)
- *   DELETE /:slug    → hq-x DELETE /api/v1/signals/:slug   (hard delete)
+ *   GET    /              → hq-x GET    /api/v1/signals
+ *   PATCH  /:slug         → hq-x PATCH  /api/v1/signals/:slug         (webhook URLs / target / is_active)
+ *   DELETE /:slug         → hq-x DELETE /api/v1/signals/:slug         (hard delete)
+ *   POST   /:slug/fire    → hq-x POST   /api/v1/signals/:slug/fire    (manual one-shot via Modal)
  *
  * hq-x response status + body are passed through verbatim.
  */
@@ -75,5 +76,17 @@ gtmSignalsRoutes.delete("/:slug", (c) => {
   const slug = encodeURIComponent(c.req.param("slug"));
   return proxy(c, `${env.BACKEND_X_API_URL}/api/v1/signals/${slug}`, {
     method: "DELETE",
+  });
+});
+
+gtmSignalsRoutes.post("/:slug/fire", async (c) => {
+  const slug = encodeURIComponent(c.req.param("slug"));
+  // Body is optional ({target?, limit?}); forward as-is, hq-x validates shape.
+  // c.req.text() returns "" when no body was sent, which hq-x's
+  // SignalFireBody | None handles cleanly.
+  const body = await c.req.text();
+  return proxy(c, `${env.BACKEND_X_API_URL}/api/v1/signals/${slug}/fire`, {
+    method: "POST",
+    body,
   });
 });

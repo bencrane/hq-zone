@@ -229,3 +229,52 @@ export async function deleteGtmSignal(signalSlug: string): Promise<void> {
     throw new Error(`signal delete failed: ${res.status} ${await res.text()}`);
   }
 }
+
+export interface GtmSignalFireRequest {
+  target?: WebhookTarget;
+  limit?: number;
+}
+
+export interface GtmSignalDispatchResult {
+  status: number | string;
+  elapsed_ms: number;
+  body_bytes: number;
+  exception_type?: string;
+  exception?: string;
+}
+
+export interface GtmSignalFireResult {
+  slug: string;
+  webhook_target: WebhookTarget;
+  webhook_url: string;
+  matched_rows_total: number;
+  sent_rows: number;
+  limit_applied: number | null;
+  dispatch: GtmSignalDispatchResult;
+}
+
+export interface GtmSignalFireEnvelope {
+  data: GtmSignalFireResult;
+}
+
+export async function fireGtmSignal(
+  signalSlug: string,
+  body: GtmSignalFireRequest = {},
+): Promise<GtmSignalFireResult> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/signals/${encodeURIComponent(signalSlug)}/fire`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: await bearer(),
+      },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!res.ok) {
+    throw new Error(`signal fire failed: ${res.status} ${await res.text()}`);
+  }
+  const env = (await res.json()) as GtmSignalFireEnvelope;
+  return env.data;
+}
