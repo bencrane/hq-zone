@@ -6,7 +6,7 @@
  * with revert-on-error.
  */
 import {
-  Badge, Box, Button, Callout, Code, DropdownMenu, Flex, IconButton,
+  AlertDialog, Badge, Box, Button, Callout, Code, DropdownMenu, Flex, IconButton,
   SegmentedControl, Table, Text, TextField, Tooltip,
 } from "@radix-ui/themes";
 import { Check, Loader2, Pencil, Play, Trash2, X } from "lucide-react";
@@ -243,10 +243,12 @@ const FIRE_PRESETS: Array<{ label: string; limit: number | null }> = [
 ];
 
 function RowActions({
+  signalSlug,
   editing, saving, deleting, firing, hasChanges, error, fireError, fireResult,
   webhookTarget, hasTargetUrl,
   onEdit, onSave, onCancel, onDelete, onFire,
 }: {
+  signalSlug: string;
   editing: boolean;
   saving: boolean;
   deleting: boolean;
@@ -269,82 +271,126 @@ function RowActions({
     : editing
       ? "Save or cancel edits before firing"
       : `Fire signal → ${webhookTarget} URL`;
+  // Primary actions (Save/Cancel in edit, Fire/Edit in display) are tightly
+  // grouped on the left. Delete is its own group, visually separated by a
+  // vertical divider + a generous gap, so a mis-aimed click on Save/Cancel/
+  // Edit doesn't land on Delete. Delete is always disabled while editing
+  // (extra belt-and-suspenders).
   return (
     <Flex direction="column" gap="2" align="end">
-      <Flex gap="1" align="center">
-        {editing ? (
-          <>
-            <Tooltip content={hasChanges ? "Save changes" : "No changes"}>
-              <IconButton
-                size="1" variant="solid" color="green"
-                disabled={saving || !hasChanges}
-                onClick={onSave}
-                aria-label="Save signal"
-              >
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-              </IconButton>
-            </Tooltip>
-            <Tooltip content="Cancel">
-              <IconButton
-                size="1" variant="soft" color="gray"
-                disabled={saving}
-                onClick={onCancel}
-                aria-label="Cancel edit"
-              >
-                <X size={14} />
-              </IconButton>
-            </Tooltip>
-          </>
-        ) : (
-          <>
-            <DropdownMenu.Root>
-              <Tooltip content={fireTooltip}>
-                <DropdownMenu.Trigger disabled={fireDisabled}>
-                  <IconButton
-                    size="1" variant="ghost" color="blue"
-                    disabled={fireDisabled}
-                    aria-label="Fire signal"
-                  >
-                    {firing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                  </IconButton>
-                </DropdownMenu.Trigger>
+      <Flex gap="3" align="center">
+        <Flex gap="1" align="center">
+          {editing ? (
+            <>
+              <Tooltip content={hasChanges ? "Save changes" : "No changes"}>
+                <IconButton
+                  size="2" variant="solid" color="green"
+                  disabled={saving || !hasChanges}
+                  onClick={onSave}
+                  aria-label="Save signal"
+                >
+                  {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                </IconButton>
               </Tooltip>
-              <DropdownMenu.Content>
-                <DropdownMenu.Label>
-                  Fire → {webhookTarget} URL
-                </DropdownMenu.Label>
-                {FIRE_PRESETS.map((p) => (
-                  <DropdownMenu.Item key={p.label} onClick={() => onFire(p.limit)}>
-                    {p.label}
+              <Tooltip content="Cancel">
+                <IconButton
+                  size="2" variant="soft" color="gray"
+                  disabled={saving}
+                  onClick={onCancel}
+                  aria-label="Cancel edit"
+                >
+                  <X size={16} />
+                </IconButton>
+              </Tooltip>
+            </>
+          ) : (
+            <>
+              <DropdownMenu.Root>
+                <Tooltip content={fireTooltip}>
+                  <DropdownMenu.Trigger disabled={fireDisabled}>
+                    <IconButton
+                      size="2" variant="soft" color="blue"
+                      disabled={fireDisabled}
+                      aria-label="Fire signal"
+                    >
+                      {firing ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+                    </IconButton>
+                  </DropdownMenu.Trigger>
+                </Tooltip>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Label>
+                    Fire → {webhookTarget} URL
+                  </DropdownMenu.Label>
+                  {FIRE_PRESETS.map((p) => (
+                    <DropdownMenu.Item key={p.label} onClick={() => onFire(p.limit)}>
+                      {p.label}
+                    </DropdownMenu.Item>
+                  ))}
+                  <DropdownMenu.Separator />
+                  <DropdownMenu.Item color="red" onClick={() => onFire(null)}>
+                    Send all matched rows (production cron parity)
                   </DropdownMenu.Item>
-                ))}
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item color="red" onClick={() => onFire(null)}>
-                  Send all matched rows (production cron parity)
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-            <Tooltip content="Edit signal">
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+              <Tooltip content="Edit signal">
+                <IconButton
+                  size="2" variant="soft" color="gray"
+                  onClick={onEdit}
+                  aria-label="Edit signal"
+                >
+                  <Pencil size={16} />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
+        </Flex>
+        <Box
+          aria-hidden
+          style={{
+            width: 1,
+            height: 22,
+            background: "var(--gray-a6)",
+            flexShrink: 0,
+          }}
+        />
+        <AlertDialog.Root>
+          <Tooltip content={editing ? "Save or cancel edits first" : "Delete signal"}>
+            <AlertDialog.Trigger disabled={deleting || editing}>
               <IconButton
-                size="1" variant="ghost" color="gray"
-                onClick={onEdit}
-                aria-label="Edit signal"
+                size="2" variant="ghost" color="red"
+                disabled={deleting || editing}
+                aria-label="Delete signal"
+                style={{ marginLeft: 4 }}
               >
-                <Pencil size={14} />
+                {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
               </IconButton>
-            </Tooltip>
-          </>
-        )}
-        <Tooltip content="Delete signal">
-          <IconButton
-            size="1" variant="ghost" color="red"
-            disabled={deleting || editing}
-            onClick={onDelete}
-            aria-label="Delete signal"
-          >
-            {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-          </IconButton>
-        </Tooltip>
+            </AlertDialog.Trigger>
+          </Tooltip>
+          <AlertDialog.Content size="2" maxWidth="460px">
+            <AlertDialog.Title>Delete signal?</AlertDialog.Title>
+            <AlertDialog.Description>
+              <Text as="p" size="2">
+                You are about to delete{" "}
+                <Code variant="ghost" size="2">{signalSlug}</Code> from{" "}
+                <Code variant="ghost" size="2">ops.gtm_signals</Code>.
+              </Text>
+              <Text as="p" size="2" mt="2" color="gray">
+                This is permanent. The Modal cron will stop firing it on the next
+                tick. Re-creating it requires an INSERT.
+              </Text>
+            </AlertDialog.Description>
+            <Flex gap="3" mt="4" justify="end">
+              <AlertDialog.Cancel>
+                <Button variant="soft" color="gray">Cancel</Button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action>
+                <Button variant="solid" color="red" onClick={onDelete}>
+                  Delete permanently
+                </Button>
+              </AlertDialog.Action>
+            </Flex>
+          </AlertDialog.Content>
+        </AlertDialog.Root>
       </Flex>
       {error ? <Text size="1" color="red">{error}</Text> : null}
       {fireError ? <Text size="1" color="red" style={{ maxWidth: 220, textAlign: "right" }}>{fireError}</Text> : null}
@@ -401,11 +447,8 @@ function SignalRow({
     }
   };
   const handleDelete = async () => {
-    const ok = window.confirm(
-      "Delete this signal? This removes the row from ops.gtm_signals " +
-      "permanently. Modal cron will stop firing it on the next tick.",
-    );
-    if (!ok) return;
+    // Confirmation is handled by the AlertDialog in RowActions — this only
+    // fires after the operator clicks "Delete permanently" in the modal.
     setDeleting(true);
     try { await onDelete(sig.signal_slug); }
     finally { setDeleting(false); }
@@ -458,6 +501,7 @@ function SignalRow({
       </Table.Cell>
       <Table.Cell>
         <RowActions
+          signalSlug={sig.signal_slug}
           editing={editing}
           saving={saving}
           deleting={deleting}
