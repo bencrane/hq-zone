@@ -157,3 +157,31 @@ export async function getCoverageStats(): Promise<CoverageStats> {
   if (!res.ok) throw new Error(`coverage stats failed: ${res.status} ${await res.text()}`);
   return (await res.json()) as CoverageStats;
 }
+
+// ────────────── GTM Signals — configuration-driven trigger registry ──────────────
+// Backed by hq-x /api/v1/signals → DEX /api/v1/gtm/signals (reads ops.gtm_signals).
+// JSONB criteria is opaque-by-design at the API layer; the UI knows about a few
+// well-known keys (time_window_hours, min_obligated_usd, award_types, action_types)
+// and renders unknown keys as raw JSON.
+
+export interface GtmSignal {
+  signal_slug: string;
+  spine_target: string;
+  criteria: Record<string, unknown>;
+  n8n_webhook_url: string;
+  is_active: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface GtmSignalsResponse {
+  signals: GtmSignal[];
+}
+
+export async function getGtmSignals(): Promise<GtmSignalsResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/signals`, {
+    headers: { Authorization: await bearer() },
+  });
+  if (!res.ok) throw new Error(`signals fetch failed: ${res.status} ${await res.text()}`);
+  return (await res.json()) as GtmSignalsResponse;
+}

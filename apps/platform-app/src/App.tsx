@@ -17,6 +17,7 @@
  *   `/leads`                     → read-only view over gtm.people (auth).
  *   `/campaigns/new`             → full-page campaign builder (auth).
  *   `/coverage`                  → datasets / bridges / intersections (auth).
+ *   `/signals`                   → GTM trigger registry (ops.gtm_signals) monitor (auth).
  *   `/views`                     → list of materialized-view definitions (auth).
  *   `/views/new`                 → view builder form (auth).
  *   `/views/:id`                 → single view detail (auth).
@@ -24,6 +25,7 @@
 
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import SignalsPage from "./signals/SignalsPage";
 import ViewBuilder from "./views/ViewBuilder";
 import ViewDetail from "./views/ViewDetail";
 import ViewsList from "./views/ViewsList";
@@ -162,6 +164,14 @@ export function App() {
           element={
             <RequireAuth>
               <CoveragePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/signals"
+          element={
+            <RequireAuth>
+              <SignalsPage />
             </RequireAuth>
           }
         />
