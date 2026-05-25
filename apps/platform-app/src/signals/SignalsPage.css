@@ -1,0 +1,33 @@
+/*
+ * SignalsPage table layout fixes.
+ *
+ * Radix Themes Table.Root renders:
+ *   <div class="rt-TableRoot" {...style passed via props}>
+ *     <ScrollArea>
+ *       <table class="rt-TableRootTable">  ← inline `style` prop never reaches here
+ *
+ * Without `table-layout: fixed` on the actual <table>, percentage widths on
+ * <th> cells are ignored and the browser auto-sizes columns to fit content —
+ * which blows out the webhook-URL columns (~80-char URLs) past the viewport
+ * and forces horizontal scroll on the wrapping ScrollArea.
+ *
+ * Fix: reach into the inner table from the wrapper class and set
+ * table-layout: fixed there. Then column-width percentages on
+ * Table.ColumnHeaderCell are honored, and the UrlCell ellipsis truncation
+ * kicks in because the containing <td> now has a bounded width.
+ */
+.signals-table .rt-TableRootTable {
+  table-layout: fixed;
+}
+
+/*
+ * Belt-and-suspenders: force any long-string descendant inside the URL cells
+ * to break instead of demanding overflow. The TSX side already applies
+ * ellipsis truncation via inline styles on the <Text>, but if anything else
+ * inside the cell tries to expand (e.g. a TextField in edit mode), this
+ * keeps the column boundary intact.
+ */
+.signals-table td,
+.signals-table th {
+  overflow: hidden;
+}
