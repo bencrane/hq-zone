@@ -1,25 +1,21 @@
+import { Loader2 } from "lucide-react";
 /**
- * Coverage page — `/coverage`. Three sections (Datasets / Bridges /
- * Intersections) backed by DEX's nightly-cached `/coverage/stats`
- * endpoint. Loads <500ms cold: one BFF round-trip, no live Lance
- * scans. The sub-sections render lists with operator-grade detail
- * (match_method on bridges, predicate_chain on intersections).
+ * Coverage page — `/coverage`. Single inventory table backed by DEX's
+ * nightly-cached `/coverage/stats` endpoint. Loads <500ms cold: one BFF
+ * round-trip, no live Lance scans. Each row reports name, type
+ * (Dataset / Bridge / Intersection), row count, and last-updated timestamp.
  *
- * Empty state per section: nightly cron may not have populated rows
- * yet, in which case we surface a one-line "nightly cron next at
- * 08:00 UTC" placeholder rather than blank space.
+ * Empty state: nightly cron may not have populated rows yet, in which case
+ * the table surfaces a one-line "nightly cron next at 08:00 UTC" placeholder.
  */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 
 import { Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 
-import { getCoverageStats, type CoverageStats } from "@/lib/api";
+import { type CoverageStats, getCoverageStats } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { BridgesSection } from "./BridgesSection";
-import { DatasetsSection } from "./DatasetsSection";
-import { IntersectionsSection } from "./IntersectionsSection";
+import { CoverageTable } from "./CoverageTable";
 
 export default function CoveragePage() {
   const { session, signOut } = useAuth();
@@ -64,7 +60,7 @@ export default function CoveragePage() {
                 Coverage
               </Text>
               <Text size="body-sm" color="muted">
-                Datasets, bridges, and intersections — refreshed nightly at 08:00 UTC.
+                Datasets and bridges registered in Polaris — refreshed nightly at 08:00 UTC.
               </Text>
             </Stack>
           </Inline>
@@ -90,11 +86,7 @@ export default function CoveragePage() {
             Failed to load coverage stats: {err}
           </Text>
         ) : stats ? (
-          <Stack gap="8">
-            <DatasetsSection rows={stats.datasets} />
-            <BridgesSection rows={stats.bridges} />
-            <IntersectionsSection rows={stats.intersections} />
-          </Stack>
+          <CoverageTable stats={stats} />
         ) : null}
       </Stack>
     </Page>
