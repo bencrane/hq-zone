@@ -30,6 +30,8 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
+import "./SignalsPage.css";
+
 const KNOWN_KEY_LABELS: Record<string, string> = {
   time_window_hours: "Time window",
   min_obligated_usd: "Min obligated",
@@ -494,7 +496,9 @@ function SignalsTable({
     );
   }
   return (
-    <Table.Root variant="surface" size="3" style={{ tableLayout: "fixed", width: "100%" }}>
+    // `className` is the only reliable knob — `style` on Table.Root lands on
+    // the wrapper <div>, not the inner <table>. See SignalsPage.css.
+    <Table.Root variant="surface" size="3" className="signals-table">
       <Table.Header>
         <Table.Row>
           <Table.ColumnHeaderCell width="11%">Signal Slug</Table.ColumnHeaderCell>
