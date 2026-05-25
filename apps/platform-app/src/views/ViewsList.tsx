@@ -99,8 +99,9 @@ export default function ViewsList() {
                   <th className="px-3 py-2 font-normal">Title</th>
                   <th className="px-3 py-2 font-normal">Description</th>
                   <th className="px-3 py-2 font-normal">Grain</th>
-                  <th className="px-3 py-2 font-normal">Count</th>
-                  <th className="px-3 py-2 font-normal">Materialized rows</th>
+                  <th className="px-3 py-2 font-normal">Computed</th>
+                  <th className="px-3 py-2 font-normal">Entities</th>
+                  <th className="px-3 py-2 font-normal">Action rows</th>
                   <th className="px-3 py-2 font-normal">Last computed</th>
                   <th className="px-3 py-2 font-normal">Created</th>
                 </tr>
@@ -123,6 +124,9 @@ export default function ViewsList() {
                     <td className="px-3 py-2 font-mono text-mono-xs">{v.entity_grain}</td>
                     <td className="px-3 py-2 font-mono text-mono-sm">
                       {v.computed_count === null ? "—" : v.computed_count.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-mono-sm">
+                      {v.entity_count === null ? "—" : v.entity_count.toLocaleString()}
                     </td>
                     <td className="px-3 py-2 font-mono text-mono-sm">
                       {v.row_count === null ? "—" : v.row_count.toLocaleString()}

@@ -134,7 +134,12 @@ export const viewSchema = viewSpecSchema.extend({
   // or after a spec patch.
   materialized_uri: z.string().nullable().default(null),
   materialized_at: isoTimestampSchema.nullable().default(null),
+  // row_count   = ds.count_rows() on the materialized dataset (action grain —
+  //               one row per matching source row).
+  // entity_count = DISTINCT(entity_grain) — the cohort size operators care
+  //                about ("how many companies?").
   row_count: z.number().int().nullable().default(null),
+  entity_count: z.number().int().nullable().default(null),
 });
 export type View = z.infer<typeof viewSchema>;
 
