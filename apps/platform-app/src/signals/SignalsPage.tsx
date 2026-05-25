@@ -9,7 +9,7 @@ import {
   Badge, Box, Button, Callout, Code, Flex, IconButton, SegmentedControl,
   Table, Text, TextField, Tooltip,
 } from "@radix-ui/themes";
-import { Loader2, Trash2 } from "lucide-react";
+import { Check, Loader2, Pencil, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -121,125 +121,242 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
 }
 
 /**
- * EditableUrlCell — text input with save-on-blur / save-on-Enter, cancel-on-Esc.
- * Active indicator (small green dot + "FIRING" label) shows when this cell's
- * column matches the signal's webhook_target.
+ * UrlCell — read-only URL text by default; switches to a TextField when the
+ * containing row is in edit mode. The FIRING badge follows the row's draft
+ * target so toggling Test/Prod in edit mode updates the indicator live.
  */
-function EditableUrlCell({
-  initial, isFiring, onSave,
+function UrlCell({
+  value, editing, isFiring, onChange,
 }: {
-  initial: string;
+  value: string;
+  editing: boolean;
   isFiring: boolean;
-  onSave: (next: string) => Promise<void>;
+  onChange: (next: string) => void;
 }) {
-  const [value, setValue] = useState(initial);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // If parent reloads data (e.g. after target toggle elsewhere), resync.
-  useEffect(() => { setValue(initial); }, [initial]);
-
-  const commit = async () => {
-    if (value === initial) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await onSave(value);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "save failed");
-      setValue(initial); // revert
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Flex direction="column" gap="1">
+  if (editing) {
+    return (
       <Flex gap="2" align="center">
         <TextField.Root
           size="1"
           value={value}
-          placeholder="(empty)"
-          onChange={(e) => setValue(e.target.value)}
-          onBlur={() => void commit()}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-            else if (e.key === "Escape") { setValue(initial); (e.target as HTMLInputElement).blur(); }
-          }}
-          disabled={saving}
+          placeholder="https://…"
+          onChange={(e) => onChange(e.target.value)}
           style={{ flex: 1, minWidth: 0 }}
         />
         {isFiring ? (
-          <Badge color="green" variant="solid" radius="full" size="1">
-            FIRING
-          </Badge>
+          <Badge color="green" variant="solid" radius="full" size="1">FIRING</Badge>
         ) : null}
-        {saving ? <Loader2 size={12} className="animate-spin" /> : null}
       </Flex>
-      {error ? (
-        <Text size="1" color="red">{error}</Text>
+    );
+  }
+  return (
+    <Flex gap="2" align="center" style={{ minWidth: 0 }}>
+      <Text
+        size="2"
+        title={value || undefined}
+        style={{
+          flex: 1, minWidth: 0,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          fontFamily: "var(--code-font-family, monospace)",
+          color: value ? undefined : "var(--gray-9)",
+        }}
+      >
+        {value || "(empty)"}
+      </Text>
+      {isFiring ? (
+        <Badge color="green" variant="solid" radius="full" size="1">FIRING</Badge>
       ) : null}
     </Flex>
   );
 }
 
-function TargetToggle({
-  value, onChange,
+/**
+ * TargetCell — `<code>test|prod</code>` in display mode, segmented control
+ * in edit mode. Mutates the parent row's draft, not the server.
+ */
+function TargetCell({
+  value, editing, onChange,
 }: {
   value: WebhookTarget;
-  onChange: (next: WebhookTarget) => Promise<void>;
+  editing: boolean;
+  onChange: (next: WebhookTarget) => void;
 }) {
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const handle = async (next: string) => {
-    const target = next as WebhookTarget;
-    if (target === value) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await onChange(target);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "save failed");
-    } finally {
-      setSaving(false);
-    }
-  };
+  if (editing) {
+    return (
+      <SegmentedControl.Root
+        size="1" value={value} onValueChange={(v) => onChange(v as WebhookTarget)}
+      >
+        <SegmentedControl.Item value="test">Test</SegmentedControl.Item>
+        <SegmentedControl.Item value="prod">Prod</SegmentedControl.Item>
+      </SegmentedControl.Root>
+    );
+  }
+  return <Code variant="ghost" size="2">{value}</Code>;
+}
+
+/**
+ * RowActions — single action column. Display: pencil + trash. Edit: save +
+ * cancel + trash. Save is disabled when there are no pending changes.
+ */
+function RowActions({
+  editing, saving, deleting, hasChanges, error,
+  onEdit, onSave, onCancel, onDelete,
+}: {
+  editing: boolean;
+  saving: boolean;
+  deleting: boolean;
+  hasChanges: boolean;
+  error: string | null;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onDelete: () => void;
+}) {
   return (
-    <Flex direction="column" gap="1">
-      <Flex gap="2" align="center">
-        <SegmentedControl.Root
-          size="1" value={value} onValueChange={(v) => void handle(v)}
-        >
-          <SegmentedControl.Item value="test">Test</SegmentedControl.Item>
-          <SegmentedControl.Item value="prod">Prod</SegmentedControl.Item>
-        </SegmentedControl.Root>
-        {saving ? <Loader2 size={12} className="animate-spin" /> : null}
+    <Flex direction="column" gap="1" align="end">
+      <Flex gap="1" align="center">
+        {editing ? (
+          <>
+            <Tooltip content={hasChanges ? "Save changes" : "No changes"}>
+              <IconButton
+                size="1" variant="solid" color="green"
+                disabled={saving || !hasChanges}
+                onClick={onSave}
+                aria-label="Save signal"
+              >
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip content="Cancel">
+              <IconButton
+                size="1" variant="soft" color="gray"
+                disabled={saving}
+                onClick={onCancel}
+                aria-label="Cancel edit"
+              >
+                <X size={14} />
+              </IconButton>
+            </Tooltip>
+          </>
+        ) : (
+          <Tooltip content="Edit signal">
+            <IconButton
+              size="1" variant="ghost" color="gray"
+              onClick={onEdit}
+              aria-label="Edit signal"
+            >
+              <Pencil size={14} />
+            </IconButton>
+          </Tooltip>
+        )}
+        <Tooltip content="Delete signal">
+          <IconButton
+            size="1" variant="ghost" color="red"
+            disabled={deleting || editing}
+            onClick={onDelete}
+            aria-label="Delete signal"
+          >
+            {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+          </IconButton>
+        </Tooltip>
       </Flex>
       {error ? <Text size="1" color="red">{error}</Text> : null}
     </Flex>
   );
 }
 
-function DeleteButton({ onDelete }: { onDelete: () => Promise<void> }) {
-  const [busy, setBusy] = useState(false);
+/**
+ * SignalRow — owns its own edit state + pending-changes draft. Save commits
+ * all pending field changes in one PATCH; cancel discards them. Display
+ * values reflect either the draft (when editing) or the server row.
+ */
+function SignalRow({
+  sig, onPatch, onDelete,
+}: {
+  sig: GtmSignal;
+  onPatch: (slug: string, patch: GtmSignalPatch) => Promise<void>;
+  onDelete: (slug: string) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<GtmSignalPatch>({});
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // If the row identity changes under us (rare — e.g. reload), drop the draft.
+  useEffect(() => { setDraft({}); setError(null); }, [sig.signal_slug]);
+
+  const testUrl = (draft.webhook_test_url ?? sig.webhook_test_url) as string;
+  const prodUrl = (draft.webhook_prod_url ?? sig.webhook_prod_url) as string;
+  const target  = (draft.webhook_target ?? sig.webhook_target) as WebhookTarget;
+  const hasChanges = Object.keys(draft).length > 0;
+
+  const handleEdit   = () => { setError(null); setEditing(true); };
+  const handleCancel = () => { setDraft({}); setError(null); setEditing(false); };
+  const handleSave   = async () => {
+    if (!hasChanges) { setEditing(false); return; }
+    setSaving(true); setError(null);
+    try {
+      await onPatch(sig.signal_slug, draft);
+      setDraft({});
+      setEditing(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+  const handleDelete = async () => {
+    const ok = window.confirm(
+      "Delete this signal? This removes the row from ops.gtm_signals " +
+      "permanently. Modal cron will stop firing it on the next tick.",
+    );
+    if (!ok) return;
+    setDeleting(true);
+    try { await onDelete(sig.signal_slug); }
+    finally { setDeleting(false); }
+  };
+
   return (
-    <IconButton
-      size="1" variant="ghost" color="red"
-      disabled={busy}
-      onClick={async () => {
-        const ok = window.confirm(
-          "Delete this signal? This removes the row from ops.gtm_signals " +
-          "permanently. Modal cron will stop firing it on the next tick.",
-        );
-        if (!ok) return;
-        setBusy(true);
-        try { await onDelete(); }
-        finally { setBusy(false); }
-      }}
-      aria-label="Delete signal"
-    >
-      {busy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-    </IconButton>
+    <Table.Row align="start">
+      <Table.RowHeaderCell>
+        <Code variant="ghost" size="2">{sig.signal_slug}</Code>
+      </Table.RowHeaderCell>
+      <Table.Cell><StatusBadge isActive={sig.is_active} /></Table.Cell>
+      <Table.Cell><Code variant="ghost" size="2">{sig.spine_target}</Code></Table.Cell>
+      <Table.Cell><CriteriaCell criteria={sig.criteria} /></Table.Cell>
+      <Table.Cell>
+        <UrlCell
+          value={testUrl} editing={editing} isFiring={target === "test"}
+          onChange={(v) => setDraft((d) => ({ ...d, webhook_test_url: v }))}
+        />
+      </Table.Cell>
+      <Table.Cell>
+        <UrlCell
+          value={prodUrl} editing={editing} isFiring={target === "prod"}
+          onChange={(v) => setDraft((d) => ({ ...d, webhook_prod_url: v }))}
+        />
+      </Table.Cell>
+      <Table.Cell>
+        <TargetCell
+          value={target} editing={editing}
+          onChange={(v) => setDraft((d) => ({ ...d, webhook_target: v }))}
+        />
+      </Table.Cell>
+      <Table.Cell>
+        <RowActions
+          editing={editing}
+          saving={saving}
+          deleting={deleting}
+          hasChanges={hasChanges}
+          error={error}
+          onEdit={handleEdit}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          onDelete={handleDelete}
+        />
+      </Table.Cell>
+    </Table.Row>
   );
 }
 
@@ -263,49 +380,24 @@ function SignalsTable({
     <Table.Root variant="surface" size="2">
       <Table.Header>
         <Table.Row>
-          <Table.ColumnHeaderCell width="14%">Signal Slug</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="8%">Status</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="18%">Target</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="22%">Criteria</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="14%">Webhook Test URL</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="14%">Webhook Prod URL</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="6%">Fires</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="4%">{""}</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="13%">Signal Slug</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="6%">Status</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="13%">Target</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="20%">Criteria</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="17%">Webhook Test URL</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="17%">Webhook Prod URL</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="7%">Fires</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="7%">{""}</Table.ColumnHeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>
         {signals.map((sig) => (
-          <Table.Row key={sig.signal_slug} align="start">
-            <Table.RowHeaderCell>
-              <Code variant="ghost" size="2">{sig.signal_slug}</Code>
-            </Table.RowHeaderCell>
-            <Table.Cell><StatusBadge isActive={sig.is_active} /></Table.Cell>
-            <Table.Cell><Code variant="ghost" size="2">{sig.spine_target}</Code></Table.Cell>
-            <Table.Cell><CriteriaCell criteria={sig.criteria} /></Table.Cell>
-            <Table.Cell>
-              <EditableUrlCell
-                initial={sig.webhook_test_url}
-                isFiring={sig.webhook_target === "test"}
-                onSave={(next) => onPatch(sig.signal_slug, { webhook_test_url: next })}
-              />
-            </Table.Cell>
-            <Table.Cell>
-              <EditableUrlCell
-                initial={sig.webhook_prod_url}
-                isFiring={sig.webhook_target === "prod"}
-                onSave={(next) => onPatch(sig.signal_slug, { webhook_prod_url: next })}
-              />
-            </Table.Cell>
-            <Table.Cell>
-              <TargetToggle
-                value={sig.webhook_target}
-                onChange={(next) => onPatch(sig.signal_slug, { webhook_target: next })}
-              />
-            </Table.Cell>
-            <Table.Cell>
-              <DeleteButton onDelete={() => onDelete(sig.signal_slug)} />
-            </Table.Cell>
-          </Table.Row>
+          <SignalRow
+            key={sig.signal_slug}
+            sig={sig}
+            onPatch={onPatch}
+            onDelete={onDelete}
+          />
         ))}
       </Table.Body>
     </Table.Root>
