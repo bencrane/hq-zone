@@ -70,11 +70,11 @@ const TOOLS: Tool[] = [
     to: "/coverage",
   },
   {
-    title: "Audiences",
+    title: "Views",
     description:
-      "Define deterministic cohorts over the data factory. Criteria specs are the contract — same spec, same query, every run.",
+      "Materialized views over the data factory. Author criteria, compute counts, materialize as Lance datasets registered in Polaris — browseable, composable, refreshable.",
     icon: Target,
-    to: "/audiences",
+    to: "/views",
   },
 ];
 

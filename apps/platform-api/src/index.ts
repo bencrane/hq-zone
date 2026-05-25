@@ -22,7 +22,7 @@ import { samOppsRoutes } from "./routes/sam-opps.ts";
 import { campaignsRoutes } from "./routes/campaigns.ts";
 import { coverageRoutes } from "./routes/coverage.ts";
 import { gtmPeopleRoutes } from "./routes/gtm-people.ts";
-import { audiencesRoutes } from "./routes/audiences.ts";
+import { viewsRoutes } from "./routes/views.ts";
 
 const app = new Hono<{ Variables: AuthVariables & { requestId: string } }>();
 
@@ -51,7 +51,7 @@ app.route("/api/v1/sam-opps", samOppsRoutes);
 app.route("/api/v1/campaigns", campaignsRoutes);
 app.route("/api/v1/coverage", coverageRoutes);
 app.route("/api/v1/gtm/people", gtmPeopleRoutes);
-app.route("/api/v1/audiences", audiencesRoutes);
+app.route("/api/v1/views", viewsRoutes);
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 // Bind explicitly to 0.0.0.0 so Railway's external healthcheck can reach
