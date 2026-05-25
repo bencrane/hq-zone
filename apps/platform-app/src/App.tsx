@@ -17,16 +17,16 @@
  *   `/leads`                     → read-only view over gtm.people (auth).
  *   `/campaigns/new`             → full-page campaign builder (auth).
  *   `/coverage`                  → datasets / bridges / intersections (auth).
- *   `/audiences`                 → list of authored audiences (auth).
- *   `/audiences/new`             → audience builder form (auth).
- *   `/audiences/:id`             → single audience detail (auth).
+ *   `/views`                     → list of materialized-view definitions (auth).
+ *   `/views/new`                 → view builder form (auth).
+ *   `/views/:id`                 → single view detail (auth).
  */
 
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import AudienceBuilder from "./audiences/AudienceBuilder";
-import AudienceDetail from "./audiences/AudienceDetail";
-import AudiencesList from "./audiences/AudiencesList";
+import ViewBuilder from "./views/ViewBuilder";
+import ViewDetail from "./views/ViewDetail";
+import ViewsList from "./views/ViewsList";
 import CampaignBuilder from "./campaigns/CampaignBuilder";
 import { HQBadge } from "./components/HQBadge";
 import CoveragePage from "./coverage/CoveragePage";
@@ -166,26 +166,26 @@ export function App() {
           }
         />
         <Route
-          path="/audiences"
+          path="/views"
           element={
             <RequireAuth>
-              <AudiencesList />
+              <ViewsList />
             </RequireAuth>
           }
         />
         <Route
-          path="/audiences/new"
+          path="/views/new"
           element={
             <RequireAuth>
-              <AudienceBuilder />
+              <ViewBuilder />
             </RequireAuth>
           }
         />
         <Route
-          path="/audiences/:id"
+          path="/views/:id"
           element={
             <RequireAuth>
-              <AudienceDetail />
+              <ViewDetail />
             </RequireAuth>
           }
         />

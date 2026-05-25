@@ -1,6 +1,6 @@
 /**
- * Audience builder — `/audiences/new`. Operator-authored form that
- * composes an audience-spec from the source-catalog field metadata.
+ * View builder — `/views/new`. Operator-authored form that composes a
+ * view-spec from the source-catalog field metadata (fetched from the BFF).
  *
  * Authoring flow:
  *   1. Pick a source (drives entity_grain + available fields).
@@ -9,7 +9,7 @@
  *      shapes are driven by the field's catalog entry (enum_nullable
  *      offers IS NULL; numeric offers gt/gte/lt/lte/between; date offers
  *      between_relative_days etc.).
- *   4. Submit → POST /api/v1/audiences. BFF returns the persisted entity.
+ *   4. Submit → POST /api/v1/views. BFF returns the persisted entity.
  *
  * The form is driven entirely by the catalog. Adding new sources or new
  * fields to a source is a pure backend add; this component re-renders.
@@ -18,35 +18,35 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import type {
-  AudienceCriterion,
-  AudienceField,
-  AudienceOperator,
-  AudienceSourceCatalogEntry,
-  AudienceSpec,
+  ViewCriterion,
+  ViewField,
+  ViewOperator,
+  ViewSourceCatalogEntry,
+  ViewSpec,
 } from "@rare-structure-hq/shared";
 import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 
-import { createAudience, listSourceCatalog } from "./api";
+import { createView, listSourceCatalog } from "./api";
 
 // ---------------------------------------------------------------------------
-// Form state — operator-authored. Convert to AudienceSpec at submit time.
+// Form state — operator-authored. Convert to ViewSpec at submit time.
 // ---------------------------------------------------------------------------
 
 interface CriterionDraft {
   _id: string; // stable client-side id for React keys
   field: string;
-  operator: AudienceOperator | "";
+  operator: ViewOperator | "";
   value: unknown;
 }
 
-interface AudienceDraft {
+interface ViewDraft {
   title: string;
   description: string;
   source_id: string;
   criteria: CriterionDraft[];
 }
 
-const EMPTY_DRAFT: AudienceDraft = {
+const EMPTY_DRAFT: ViewDraft = {
   title: "",
   description: "",
   source_id: "",
@@ -57,7 +57,7 @@ const EMPTY_DRAFT: AudienceDraft = {
 // Operator → human label
 // ---------------------------------------------------------------------------
 
-const OPERATOR_LABELS: Record<AudienceOperator, string> = {
+const OPERATOR_LABELS: Record<ViewOperator, string> = {
   is_null: "is NULL (brand-new — no modification)",
   is_not_null: "is NOT NULL (any modification)",
   eq: "equals",
@@ -77,18 +77,18 @@ const OPERATOR_LABELS: Record<AudienceOperator, string> = {
 // ---------------------------------------------------------------------------
 
 function getField(
-  source: AudienceSourceCatalogEntry | null,
+  source: ViewSourceCatalogEntry | null,
   fieldName: string,
-): AudienceField | null {
+): ViewField | null {
   if (!source) return null;
   return source.fields.find((f) => f.name === fieldName) ?? null;
 }
 
-function operatorNeedsValue(op: AudienceOperator): boolean {
+function operatorNeedsValue(op: ViewOperator): boolean {
   return op !== "is_null" && op !== "is_not_null";
 }
 
-function defaultValueForOperator(op: AudienceOperator): unknown {
+function defaultValueForOperator(op: ViewOperator): unknown {
   if (op === "between") return [null, null];
   if (op === "between_relative_days") return { n_days_back: 30 };
   if (op === "in" || op === "not_in") return [];
@@ -106,8 +106,8 @@ function ValueInput({
   value,
   onChange,
 }: {
-  field: AudienceField;
-  operator: AudienceOperator;
+  field: ViewField;
+  operator: ViewOperator;
   value: unknown;
   onChange: (next: unknown) => void;
 }) {
@@ -261,9 +261,9 @@ function ValueInput({
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function AudienceBuilder() {
-  const [catalog, setCatalog] = useState<AudienceSourceCatalogEntry[] | null>(null);
-  const [draft, setDraft] = useState<AudienceDraft>(EMPTY_DRAFT);
+export default function ViewBuilder() {
+  const [catalog, setCatalog] = useState<ViewSourceCatalogEntry[] | null>(null);
+  const [draft, setDraft] = useState<ViewDraft>(EMPTY_DRAFT);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -280,7 +280,7 @@ export default function AudienceBuilder() {
       .catch((e) => setError(String(e)));
   }, []);
 
-  const selectedSource = useMemo<AudienceSourceCatalogEntry | null>(() => {
+  const selectedSource = useMemo<ViewSourceCatalogEntry | null>(() => {
     if (!catalog) return null;
     return catalog.find((s) => s.source_id === draft.source_id) ?? null;
   }, [catalog, draft.source_id]);
@@ -339,17 +339,17 @@ export default function AudienceBuilder() {
         return;
       }
     }
-    const spec: AudienceSpec = {
+    const spec: ViewSpec = {
       title: draft.title.trim(),
       description: draft.description.trim(),
       entity_grain: selectedSource.entity_grain,
       sources: [{ source_id: selectedSource.source_id }],
       criteria: draft.criteria.map((c) => {
-        const out: AudienceCriterion = {
+        const out: ViewCriterion = {
           field: c.field,
-          operator: c.operator as AudienceOperator,
+          operator: c.operator as ViewOperator,
         };
-        if (operatorNeedsValue(c.operator as AudienceOperator)) {
+        if (operatorNeedsValue(c.operator as ViewOperator)) {
           out.value = c.value;
         }
         return out;
@@ -357,8 +357,8 @@ export default function AudienceBuilder() {
     };
     setSubmitting(true);
     try {
-      const created = await createAudience(spec);
-      navigate(`/audiences/${created.id}`);
+      const created = await createView(spec);
+      navigate(`/views/${created.id}`);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -372,14 +372,14 @@ export default function AudienceBuilder() {
         <Inline justify="between" align="center">
           <Stack gap="1">
             <Text as="h1" size="display-sm">
-              New audience
+              New view
             </Text>
             <Text size="body-sm" color="muted">
               Compose a deterministic cohort. The criteria spec is the contract: same spec → same
               query, every run.
             </Text>
           </Stack>
-          <Link to="/audiences">
+          <Link to="/views">
             <Button size="sm" variant="ghost">
               Cancel
             </Button>
@@ -490,7 +490,7 @@ export default function AudienceBuilder() {
               <Stack gap="3">
                 {draft.criteria.map((c, idx) => {
                   const field = getField(selectedSource, c.field);
-                  const opChoices: AudienceOperator[] = field?.operators ?? [];
+                  const opChoices: ViewOperator[] = field?.operators ?? [];
                   return (
                     <Box key={c._id} border="subtle" p="3" unsafe_className="rounded-md">
                       <Stack gap="2">
@@ -519,8 +519,8 @@ export default function AudienceBuilder() {
                             value={c.operator}
                             onChange={(e) =>
                               updateCriterion(idx, {
-                                operator: e.target.value as AudienceOperator,
-                                value: defaultValueForOperator(e.target.value as AudienceOperator),
+                                operator: e.target.value as ViewOperator,
+                                value: defaultValueForOperator(e.target.value as ViewOperator),
                               })
                             }
                             className="rounded border border-[color:var(--color-border-subtle)] bg-[color:var(--color-surface)] px-2 py-1 text-body-sm"
@@ -537,7 +537,7 @@ export default function AudienceBuilder() {
                           {field && c.operator !== "" && (
                             <ValueInput
                               field={field}
-                              operator={c.operator as AudienceOperator}
+                              operator={c.operator as ViewOperator}
                               value={c.value}
                               onChange={(next) => updateCriterion(idx, { value: next })}
                             />
@@ -579,7 +579,7 @@ export default function AudienceBuilder() {
                     .map((c) => ({
                       field: c.field,
                       operator: c.operator,
-                      ...(operatorNeedsValue(c.operator as AudienceOperator)
+                      ...(operatorNeedsValue(c.operator as ViewOperator)
                         ? { value: c.value }
                         : {}),
                     })),
@@ -592,13 +592,13 @@ export default function AudienceBuilder() {
         </Box>
 
         <Inline justify="end" gap="3">
-          <Link to="/audiences">
+          <Link to="/views">
             <Button size="md" variant="ghost">
               Cancel
             </Button>
           </Link>
           <Button size="md" onClick={submit} disabled={submitting || !selectedSource}>
-            {submitting ? "Saving…" : "Save audience"}
+            {submitting ? "Saving…" : "Save view"}
           </Button>
         </Inline>
       </Stack>
