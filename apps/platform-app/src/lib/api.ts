@@ -253,14 +253,23 @@ export interface GtmSignalFireResult {
   dispatch: GtmSignalDispatchResult;
 }
 
-export interface GtmSignalFireEnvelope {
-  data: GtmSignalFireResult;
+// Spawn response — returned immediately by POST /signals/:slug/fire. The UI
+// then polls GET /signals/fire/status/:call_id until status === "done".
+export interface GtmSignalFireSpawn {
+  call_id: string;
+  status: "pending";
+  slug: string;
 }
+
+// Status poll response shape. "pending" = still running, "done" = result attached.
+export type GtmSignalFireStatus =
+  | { call_id: string; status: "pending" }
+  | { call_id: string; status: "done"; result: GtmSignalFireResult };
 
 export async function fireGtmSignal(
   signalSlug: string,
   body: GtmSignalFireRequest = {},
-): Promise<GtmSignalFireResult> {
+): Promise<GtmSignalFireSpawn> {
   const res = await fetch(
     `${API_BASE}/api/v1/signals/${encodeURIComponent(signalSlug)}/fire`,
     {
@@ -275,6 +284,18 @@ export async function fireGtmSignal(
   if (!res.ok) {
     throw new Error(`signal fire failed: ${res.status} ${await res.text()}`);
   }
-  const env = (await res.json()) as GtmSignalFireEnvelope;
+  const env = (await res.json()) as { data: GtmSignalFireSpawn };
+  return env.data;
+}
+
+export async function fireGtmSignalStatus(callId: string): Promise<GtmSignalFireStatus> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/signals/fire/status/${encodeURIComponent(callId)}`,
+    { headers: { Authorization: await bearer() } },
+  );
+  if (!res.ok) {
+    throw new Error(`signal fire status failed: ${res.status} ${await res.text()}`);
+  }
+  const env = (await res.json()) as { data: GtmSignalFireStatus };
   return env.data;
 }

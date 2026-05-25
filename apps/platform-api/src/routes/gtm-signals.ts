@@ -83,10 +83,24 @@ gtmSignalsRoutes.post("/:slug/fire", async (c) => {
   const slug = encodeURIComponent(c.req.param("slug"));
   // Body is optional ({target?, limit?}); forward as-is, hq-x validates shape.
   // c.req.text() returns "" when no body was sent, which hq-x's
-  // SignalFireBody | None handles cleanly.
+  // SignalFireBody | None handles cleanly. Returns {call_id, status:"pending", slug}
+  // immediately — the UI polls /fire/status/:call_id for the result.
   const body = await c.req.text();
   return proxy(c, `${env.BACKEND_X_API_URL}/api/v1/signals/${slug}/fire`, {
     method: "POST",
     body,
+  });
+});
+
+gtmSignalsRoutes.get("/fire/status/:call_id", (c) => {
+  // Non-blocking poll of a previously-spawned fire. Returns either
+  //   {status:"pending", call_id}
+  // or
+  //   {status:"done", call_id, result:{...}}
+  // hq-x propagates DEX's 422 (per-signal error) and 410 (call_id expired)
+  // verbatim so the UI can render the precise reason.
+  const callId = encodeURIComponent(c.req.param("call_id"));
+  return proxy(c, `${env.BACKEND_X_API_URL}/api/v1/signals/fire/status/${callId}`, {
+    method: "GET",
   });
 });
