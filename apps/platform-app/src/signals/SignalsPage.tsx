@@ -19,7 +19,7 @@ import {
 
 import {
   deleteGtmSignal,
-  fireGtmSignal,
+  fireGtmSignalAndAwait,
   getGtmSignals,
   patchGtmSignal,
   type GtmSignal,
@@ -454,17 +454,31 @@ function SignalRow({
     finally { setDeleting(false); }
   };
   const handleFire = async (limit: number | null) => {
+    // `firing` already guards via fireDisabled in RowActions, but guard here
+    // too — double-tap on the dropdown item before React re-renders is a
+    // real risk and even one extra dispatch to n8n is a bug.
+    if (firing) return;
     const label = limit === null ? "all matched rows" : `${limit} rows`;
     const ok = window.confirm(
       `Fire signal ${sig.signal_slug} now?\n\n` +
       `→ ${sig.webhook_target.toUpperCase()} URL\n` +
       `→ ${label}\n\n` +
-      `This shuttles to Modal and POSTs a real payload (same as the daily cron).`,
+      `This spawns a Modal job (DuckDB-over-Lance scan + httpx POST). For wide\n` +
+      `windows the scan can take 60-180s; the button stays disabled until it\n` +
+      `completes. Exactly one payload will reach n8n per click.`,
     );
     if (!ok) return;
     setFiring(true); setFireError(null); setFireResult(null);
     try {
-      const result = await fireGtmSignal(sig.signal_slug, limit === null ? {} : { limit });
+      // fireGtmSignalAndAwait: POST /fire → spawn Modal → poll /fire/status
+      // every 2s until done (or 5min ceiling). The button is disabled the
+      // entire time. Replaces the previous synchronous fireGtmSignal() which
+      // hit hq-x's 30s timeout, returned 599, but let Modal finish anyway —
+      // producing a UI red-state next to a successful n8n dispatch and
+      // tempting the operator into a double-fire.
+      const result = await fireGtmSignalAndAwait(
+        sig.signal_slug, limit === null ? {} : { limit },
+      );
       setFireResult(result);
     } catch (e) {
       setFireError(e instanceof Error ? e.message : "fire failed");

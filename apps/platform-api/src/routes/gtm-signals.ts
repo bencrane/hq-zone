@@ -8,10 +8,11 @@
  * and forward the user JWT as `X-User-Bearer`.
  *
  * Routes:
- *   GET    /              → hq-x GET    /api/v1/signals
- *   PATCH  /:slug         → hq-x PATCH  /api/v1/signals/:slug         (webhook URLs / target / is_active)
- *   DELETE /:slug         → hq-x DELETE /api/v1/signals/:slug         (hard delete)
- *   POST   /:slug/fire    → hq-x POST   /api/v1/signals/:slug/fire    (manual one-shot via Modal)
+ *   GET    /                      → hq-x GET    /api/v1/signals
+ *   PATCH  /:slug                 → hq-x PATCH  /api/v1/signals/:slug                    (webhook URLs / target / is_active)
+ *   DELETE /:slug                 → hq-x DELETE /api/v1/signals/:slug                    (hard delete)
+ *   POST   /:slug/fire            → hq-x POST   /api/v1/signals/:slug/fire               (spawn manual fire, returns call_id)
+ *   GET    /fire/status/:call_id  → hq-x GET    /api/v1/signals/fire/status/:call_id     (poll spawned fire's status)
  *
  * hq-x response status + body are passed through verbatim.
  */
@@ -84,9 +85,21 @@ gtmSignalsRoutes.post("/:slug/fire", async (c) => {
   // Body is optional ({target?, limit?}); forward as-is, hq-x validates shape.
   // c.req.text() returns "" when no body was sent, which hq-x's
   // SignalFireBody | None handles cleanly.
+  //
+  // The fire path now SPAWNS (Modal.Function.spawn) rather than blocking on
+  // the result — DEX returns {call_id, status: 'pending', slug} in ~100ms.
+  // The UI polls fire-status until done. See the GET below.
   const body = await c.req.text();
   return proxy(c, `${env.BACKEND_X_API_URL}/api/v1/signals/${slug}/fire`, {
     method: "POST",
     body,
+  });
+});
+
+gtmSignalsRoutes.get("/fire/status/:call_id", (c) => {
+  // Modal FunctionCall IDs are URL-safe (fc-xxxxx...) but encode defensively.
+  const callId = encodeURIComponent(c.req.param("call_id"));
+  return proxy(c, `${env.BACKEND_X_API_URL}/api/v1/signals/fire/status/${callId}`, {
+    method: "GET",
   });
 });

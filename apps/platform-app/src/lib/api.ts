@@ -253,14 +253,33 @@ export interface GtmSignalFireResult {
   dispatch: GtmSignalDispatchResult;
 }
 
-export interface GtmSignalFireEnvelope {
-  data: GtmSignalFireResult;
+// Spawn → poll architecture.
+//
+// POST /fire returns immediately with a Modal FunctionCall id; the Modal
+// container runs the actual DuckDB-over-Lance scan + httpx POST asynchronously
+// (60-180s for wide windows). The UI polls /fire/status/{call_id} every ~2s
+// until status === "done" (or the request fails with 422 / 410 / 5xx).
+//
+// This eliminates the split-brain failure mode where hq-x's 30s timeout
+// aborted the request while Modal kept running — UI would see red, operator
+// would click Fire again, n8n would receive the payload twice.
+
+export interface GtmSignalFireSpawnResponse {
+  call_id: string;
+  status: "pending";
+  slug: string;
 }
+
+export type GtmSignalFireStatusResponse =
+  | { status: "pending"; call_id: string }
+  | { status: "done"; call_id: string; result: GtmSignalFireResult };
+
+interface DataEnvelope<T> { data: T; }
 
 export async function fireGtmSignal(
   signalSlug: string,
   body: GtmSignalFireRequest = {},
-): Promise<GtmSignalFireResult> {
+): Promise<GtmSignalFireSpawnResponse> {
   const res = await fetch(
     `${API_BASE}/api/v1/signals/${encodeURIComponent(signalSlug)}/fire`,
     {
@@ -275,6 +294,54 @@ export async function fireGtmSignal(
   if (!res.ok) {
     throw new Error(`signal fire failed: ${res.status} ${await res.text()}`);
   }
-  const env = (await res.json()) as GtmSignalFireEnvelope;
+  const env = (await res.json()) as DataEnvelope<GtmSignalFireSpawnResponse>;
   return env.data;
+}
+
+export async function fireGtmSignalStatus(
+  callId: string,
+): Promise<GtmSignalFireStatusResponse> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/signals/fire/status/${encodeURIComponent(callId)}`,
+    { headers: { Authorization: await bearer() } },
+  );
+  if (!res.ok) {
+    throw new Error(`signal fire-status failed: ${res.status} ${await res.text()}`);
+  }
+  const env = (await res.json()) as DataEnvelope<GtmSignalFireStatusResponse>;
+  return env.data;
+}
+
+/**
+ * Spawn a fire and poll until done. Resolves with the completed FireResult or
+ * rejects with the first hard failure. Callers should keep the Fire button
+ * disabled for the entire lifetime of this promise — that's what prevents
+ * the double-fire UX bug.
+ *
+ * Poll cadence: 2s. Max wall-clock wait: 5 minutes (the Modal function has
+ * a 30-minute timeout but the operator UI is interactive — if it takes longer
+ * than 5min, surface a "still running" state and let the user re-poll.)
+ */
+export async function fireGtmSignalAndAwait(
+  signalSlug: string,
+  body: GtmSignalFireRequest = {},
+  opts: { pollIntervalMs?: number; maxWaitMs?: number } = {},
+): Promise<GtmSignalFireResult> {
+  const pollIntervalMs = opts.pollIntervalMs ?? 2000;
+  const maxWaitMs = opts.maxWaitMs ?? 5 * 60 * 1000;
+
+  const spawn = await fireGtmSignal(signalSlug, body);
+  const callId = spawn.call_id;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < maxWaitMs) {
+    await new Promise((r) => setTimeout(r, pollIntervalMs));
+    const poll = await fireGtmSignalStatus(callId);
+    if (poll.status === "done") return poll.result;
+  }
+  throw new Error(
+    `signal fire still pending after ${Math.round(maxWaitMs / 1000)}s ` +
+    `(call_id ${callId}). Modal compute may still complete — n8n will receive ` +
+    `the payload regardless. Reload the page in a minute to confirm.`,
+  );
 }
