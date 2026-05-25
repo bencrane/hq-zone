@@ -377,17 +377,17 @@ function SignalsTable({
     );
   }
   return (
-    <Table.Root variant="surface" size="2">
+    <Table.Root variant="surface" size="3" style={{ tableLayout: "fixed", width: "100%" }}>
       <Table.Header>
         <Table.Row>
-          <Table.ColumnHeaderCell width="13%">Signal Slug</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="11%">Signal Slug</Table.ColumnHeaderCell>
           <Table.ColumnHeaderCell width="6%">Status</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="13%">Target</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="20%">Criteria</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="17%">Webhook Test URL</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="17%">Webhook Prod URL</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="15%">Target</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="21%">Criteria</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="16%">Webhook Test URL</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="16%">Webhook Prod URL</Table.ColumnHeaderCell>
           <Table.ColumnHeaderCell width="7%">Fires</Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell width="7%">{""}</Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell width="8%">{""}</Table.ColumnHeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>
