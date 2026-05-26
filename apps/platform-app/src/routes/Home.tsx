@@ -4,6 +4,7 @@ import {
   LayoutGrid,
   Layers,
   ListChecks,
+  Radio,
   Send,
   Sparkles,
   Target,
@@ -75,6 +76,13 @@ const TOOLS: Tool[] = [
       "Materialized views over the data factory. Author criteria, compute counts, materialize as Lance datasets registered in Polaris — browseable, composable, refreshable.",
     icon: Target,
     to: "/views",
+  },
+  {
+    title: "Signals",
+    description:
+      "GTM trigger registry. Author criteria over gtm.people, fire matched cohorts to webhooks. Modal cron evaluates active signals daily at 09:00 UTC.",
+    icon: Radio,
+    to: "/signals",
   },
 ];
 
