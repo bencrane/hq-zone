@@ -42,9 +42,17 @@ async function outboundBody(c: Ctx, spec: ForwardSpec): Promise<string | undefin
   return raw && raw.trim().length > 0 ? raw : "{}";
 }
 
+/** Inject the validated operator id as a query param (caller-scoped GETs). */
+function withUserId(url: string, userId: string): string {
+  const u = new URL(url);
+  u.searchParams.set("user_id", userId);
+  return u.toString();
+}
+
 export async function forwardJson(c: Ctx, spec: ForwardSpec): Promise<Response> {
   const body = await outboundBody(c, spec);
-  const upstream = await fetch(spec.url, {
+  const url = spec.identity === "query" ? withUserId(spec.url, c.get("user").user_id) : spec.url;
+  const upstream = await fetch(url, {
     method: spec.method,
     headers: hqxHeaders(c.get("user"), spec.identity, body !== undefined),
     body,

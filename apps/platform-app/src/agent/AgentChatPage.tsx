@@ -8,8 +8,9 @@
  *   - RIGHT: a persistent results rail (<ResultsRail>) for present_result cards.
  *
  * The page owns the active session id; <useAgentChat> loads/tails it and mints
- * a new one on the first message. Session metadata is persisted per-browser in
- * lib/agentSessions; the conversation reloads from the server on reopen.
+ * a new one on the first message. The session list is server-backed (per-operator,
+ * via the agent-runs API over business.agent_runs); the conversation reloads from
+ * the server on reopen.
  *
  * Built on @radix-ui/themes components throughout.
  */
@@ -28,17 +29,14 @@ import {
   TextArea,
 } from "@radix-ui/themes";
 import { Send, Sparkles } from "lucide-react";
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  type ChatSession,
-  listSessions,
-  recordSession,
-  removeSession,
-  renameSession,
-  subscribe,
-  touchSession,
-} from "@/lib/agentSessions";
+  type AgentRunSummary,
+  deleteAgentRun,
+  listAgentRuns,
+  renameAgentRun,
+} from "@/lib/agentRuns";
 import { useAuth } from "@/lib/auth";
 
 import { ChatThread } from "./ChatThread";
@@ -80,7 +78,7 @@ export default function AgentChatPage() {
   const initials = useMemo(() => initialsFromEmail(session?.user?.email), [session]);
 
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [sessions, setSessions] = useState<ChatSession[]>(() => listSessions());
+  const [sessions, setSessions] = useState<AgentRunSummary[]>([]);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
       return localStorage.getItem(COLLAPSE_KEY) === "1";
@@ -89,11 +87,21 @@ export default function AgentChatPage() {
     }
   });
 
-  useEffect(() => subscribe(setSessions), []);
+  const refreshSessions = useCallback(() => {
+    listAgentRuns()
+      .then(setSessions)
+      .catch(() => {});
+  }, []);
 
-  const chat = useAgentChat(activeSessionId, (run, firstMessage) => {
-    recordSession(run.session_id, firstMessage.slice(0, 60));
+  useEffect(() => {
+    refreshSessions();
+  }, [refreshSessions]);
+
+  const chat = useAgentChat(activeSessionId, (run) => {
+    // The ledger row is written server-side on mint (title = first message);
+    // surface it and switch to the new session.
     setActiveSessionId(run.session_id);
+    refreshSessions();
   });
 
   const [draft, setDraft] = useState("");
@@ -161,14 +169,19 @@ export default function AgentChatPage() {
               collapsed={collapsed}
               onToggleCollapse={toggleCollapse}
               onNew={() => setActiveSessionId(null)}
-              onSelect={(id) => {
-                touchSession(id);
-                setActiveSessionId(id);
+              onSelect={(id) => setActiveSessionId(id)}
+              onRename={(id, title) => {
+                renameAgentRun(id, title)
+                  .then(refreshSessions)
+                  .catch(() => {});
               }}
-              onRename={(id, title) => renameSession(id, title)}
               onDelete={(id) => {
-                removeSession(id);
-                if (id === activeSessionId) setActiveSessionId(null);
+                deleteAgentRun(id)
+                  .then(() => {
+                    if (id === activeSessionId) setActiveSessionId(null);
+                    refreshSessions();
+                  })
+                  .catch(() => {});
               }}
             />
 
