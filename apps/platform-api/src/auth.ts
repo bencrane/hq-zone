@@ -17,6 +17,9 @@ import { env } from "./env.ts";
 export type CurrentUser = {
   user_id: string;
   email: string;
+  /** The raw (un-prefixed) Supabase access token, for routes that forward it
+   *  to hq-x as `X-User-Bearer`. See hqx/identity.ts. */
+  jwt: string;
 };
 
 const jwks = createRemoteJWKSet(new URL(env.SUPABASE_JWKS_URL));
@@ -47,7 +50,7 @@ export const requireUser: MiddlewareHandler<{ Variables: AuthVariables }> = asyn
 
     const email = typeof payload.email === "string" ? payload.email : "";
 
-    c.set("user", { user_id: userId, email });
+    c.set("user", { user_id: userId, email, jwt: token });
     await next();
   } catch (err) {
     if (err instanceof HTTPException) throw err;
