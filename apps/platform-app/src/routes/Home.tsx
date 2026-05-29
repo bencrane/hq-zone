@@ -1,5 +1,6 @@
 import {
   ArrowUpRight,
+  Bot,
   Crosshair,
   LayoutGrid,
   Layers,
@@ -22,6 +23,13 @@ type Tool = {
 };
 
 const TOOLS: Tool[] = [
+  {
+    title: "GTM Agent",
+    description:
+      "Chat with the gtm-agent — ask it to research accounts, build audiences, or draft outreach. Streams answers and structured result cards live.",
+    icon: Bot,
+    to: "/agent",
+  },
   {
     title: "Workbooks",
     description:
