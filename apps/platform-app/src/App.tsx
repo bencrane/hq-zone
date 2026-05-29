@@ -16,6 +16,7 @@
  *   `/opportunities/:notice_id`  → single opportunity detail (auth).
  *   `/leads`                     → read-only view over gtm.people (auth).
  *   `/campaigns/new`             → full-page campaign builder (auth).
+ *   `/agent`                     → chat with the gtm-agent (auth).
  *   `/coverage`                  → datasets / bridges / intersections (auth).
  *   `/signals`                   → GTM trigger registry (ops.gtm_signals) monitor (auth).
  *   `/views`                     → list of materialized-view definitions (auth).
@@ -25,10 +26,7 @@
 
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import SignalsPage from "./signals/SignalsPage";
-import ViewBuilder from "./views/ViewBuilder";
-import ViewDetail from "./views/ViewDetail";
-import ViewsList from "./views/ViewsList";
+import AgentChatPage from "./agent/AgentChatPage";
 import CampaignBuilder from "./campaigns/CampaignBuilder";
 import { HQBadge } from "./components/HQBadge";
 import CoveragePage from "./coverage/CoveragePage";
@@ -41,10 +39,14 @@ import OppsList from "./opportunities/OppsList";
 import { SignIn } from "./opportunities/SignIn";
 import Home from "./routes/Home";
 import MapDemo from "./routes/MapDemo";
+import SignalsPage from "./signals/SignalsPage";
 import FindCompaniesRoute from "./tables/FindCompaniesRoute";
 import TableView from "./tables/TableView";
 import TamDetail from "./tam/TamDetail";
 import TamList from "./tam/TamList";
+import ViewBuilder from "./views/ViewBuilder";
+import ViewDetail from "./views/ViewDetail";
+import ViewsList from "./views/ViewsList";
 import WorkbookDetail from "./workbooks/WorkbookDetail";
 import WorkbooksIndex from "./workbooks/WorkbooksIndex";
 
@@ -156,6 +158,14 @@ export function App() {
           element={
             <RequireAuth>
               <CampaignBuilder />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/agent"
+          element={
+            <RequireAuth>
+              <AgentChatPage />
             </RequireAuth>
           }
         />
