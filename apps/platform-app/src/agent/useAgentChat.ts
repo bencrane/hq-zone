@@ -1,21 +1,22 @@
 /**
- * useAgentChat — the chat session state machine for the gtm-agent surface.
+ * useAgentChat — chat state for ONE session, controlled by the page.
  *
- * One long-lived session per page mount (unlike <AgentRunPanel>, which tears
- * down on close). First `send` mints the session via createAgentRun; later
- * sends append a user.message to the open stream. On mount of the session we
- * BOTH open the live SSE stream AND backfill history via listAgentRunEvents —
- * the mint seeds the first user.message server-side and the agent may reply
- * before the stream attaches, so backfill closes that race (the documented
- * "history before tailing live" pattern).
+ * The page owns which session is active (so the sidebar can switch between
+ * past chats); this hook just loads + tails whatever `sessionId` it's given:
+ *   - sessionId changes → reset, backfill history via listAgentRunEvents, then
+ *     tail the live SSE stream. Backfill closes the mint→stream race so the
+ *     agent's first turn is never dropped.
+ *   - send() with a null sessionId mints a new session via createAgentRun and
+ *     calls onCreated(run, firstMessage); the page then sets it active (which
+ *     triggers the load above). send() with a session appends a user.message.
  *
- * Events are deduped by their server id and rendered in processed_at order, so
- * the backfill/live overlap collapses cleanly.
+ * Events are deduped by server id and ordered by processed_at.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   type AgentRunEvent,
+  type CreateAgentRunResponse,
   createAgentRun,
   listAgentRunEvents,
   sendUserEvent,
@@ -25,22 +26,25 @@ import {
 export type ChatStatus = "idle" | "connecting" | "running" | "ready" | "error";
 
 export interface UseAgentChat {
-  sessionId: string | null;
   events: AgentRunEvent[];
   status: ChatStatus;
-  /** True while the very first message is minting a session. */
+  /** True while a brand-new session is minting. */
   starting: boolean;
   error: string | null;
-  /** Send a message. Mints the session on the first call, appends after. */
   send: (text: string) => void;
 }
 
-export function useAgentChat(): UseAgentChat {
-  const [sessionId, setSessionId] = useState<string | null>(null);
+export function useAgentChat(
+  sessionId: string | null,
+  onCreated: (run: CreateAgentRunResponse, firstMessage: string) => void,
+): UseAgentChat {
   const [events, setEvents] = useState<AgentRunEvent[]>([]);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const seen = useRef<Set<string>>(new Set());
+  // Keep onCreated current without making send() unstable.
+  const onCreatedRef = useRef(onCreated);
+  onCreatedRef.current = onCreated;
 
   const ingest = useCallback((incoming: AgentRunEvent[]) => {
     if (incoming.length === 0) return;
@@ -56,8 +60,6 @@ export function useAgentChat(): UseAgentChat {
         added = true;
       }
       if (!added) return prev;
-      // ISO processed_at sorts lexically == chronologically; id-less events
-      // (no timestamp) fall back to insertion order via a stable sort.
       next.sort((a, b) => {
         const pa = a.processed_at ?? "";
         const pb = b.processed_at ?? "";
@@ -67,18 +69,22 @@ export function useAgentChat(): UseAgentChat {
     });
   }, []);
 
-  // Open the live stream + backfill history once a session exists.
+  // Reset + load whenever the active session changes (including → null).
   useEffect(() => {
+    seen.current = new Set();
+    setEvents([]);
+    setError(null);
     if (!sessionId) return;
+
     const abort = new AbortController();
     let cancelled = false;
 
     (async () => {
       try {
-        const hist = await listAgentRunEvents(sessionId, { limit: 200 });
+        const hist = await listAgentRunEvents(sessionId, { limit: 500 });
         if (!cancelled) ingest(hist.data);
       } catch {
-        // Non-fatal: the live stream still tails forward from here.
+        // Non-fatal: the live stream still tails forward.
       }
     })();
 
@@ -108,12 +114,11 @@ export function useAgentChat(): UseAgentChat {
       if (!sessionId) {
         setStarting(true);
         createAgentRun({ initial_message: t, title: t.slice(0, 80) })
-          .then((run) => setSessionId(run.session_id))
+          .then((run) => onCreatedRef.current(run, t))
           .catch((err) => setError(err instanceof Error ? err.message : String(err)))
           .finally(() => setStarting(false));
         return;
       }
-      // Stream is already open; the echo + agent reply arrive via SSE.
       sendUserEvent(sessionId, {
         type: "user.message",
         content: [{ type: "text", text: t }],
@@ -134,5 +139,5 @@ export function useAgentChat(): UseAgentChat {
     return sessionId ? "connecting" : "idle";
   }, [events, error, starting, sessionId]);
 
-  return { sessionId, events, status, starting, error, send };
+  return { events, status, starting, error, send };
 }
