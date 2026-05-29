@@ -311,6 +311,69 @@ export async function createAgentRun(args: CreateAgentRunArgs): Promise<CreateAg
   return (await res.json()) as CreateAgentRunResponse;
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Session history — server-backed, per-operator (backs the chat sidebar).
+// The BFF injects user_id from the validated JWT; the browser sends none.
+// ───────────────────────────────────────────────────────────────────────────
+
+export interface AgentRunSummary {
+  /** Anthropic session_id (sesn_*). */
+  id: string;
+  title: string;
+  status: string;
+  signal_slug: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AgentRunListRow {
+  session_id: string;
+  title: string | null;
+  status: string;
+  signal_slug: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** The caller's runs, newest first. */
+export async function listAgentRuns(limit = 100): Promise<AgentRunSummary[]> {
+  const url = new URL(`${API_BASE}/api/v1/agent-runs`, window.location.origin);
+  url.searchParams.set("limit", String(limit));
+  const res = await fetch(url.toString(), { headers: { Authorization: await bearer() } });
+  if (!res.ok) {
+    throw new Error(`listAgentRuns failed: HTTP ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { data?: AgentRunListRow[] };
+  return (body.data ?? []).map((r) => ({
+    id: r.session_id,
+    title: r.title ?? "Untitled chat",
+    status: r.status,
+    signal_slug: r.signal_slug,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+  }));
+}
+
+export async function renameAgentRun(sessionId: string, title: string): Promise<void> {
+  const url = `${API_BASE}/api/v1/agent-runs/${encodeURIComponent(sessionId)}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: { Authorization: await bearer(), "content-type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+  if (!res.ok) {
+    throw new Error(`renameAgentRun failed: HTTP ${res.status} ${await res.text()}`);
+  }
+}
+
+export async function deleteAgentRun(sessionId: string): Promise<void> {
+  const url = `${API_BASE}/api/v1/agent-runs/${encodeURIComponent(sessionId)}`;
+  const res = await fetch(url, { method: "DELETE", headers: { Authorization: await bearer() } });
+  if (!res.ok) {
+    throw new Error(`deleteAgentRun failed: HTTP ${res.status} ${await res.text()}`);
+  }
+}
+
 export async function listAgentRunEvents(
   sessionId: string,
   opts: { after?: string; limit?: number } = {},

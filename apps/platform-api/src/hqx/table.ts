@@ -51,6 +51,15 @@ export const HQX_ROUTES: HqxRoute[] = [
     url: () => `${B}/api/v1/agent-runs`,
   },
   {
+    // List the caller's runs (sidebar history). user_id is injected from the
+    // validated JWT by the forwarder (identity: "query").
+    method: "GET",
+    path: "/api/v1/agent-runs",
+    mode: "json",
+    identity: "query",
+    url: (c) => withQuery(c, `${B}/api/v1/agent-runs`),
+  },
+  {
     method: "GET",
     path: "/api/v1/agent-runs/:id/stream",
     mode: "stream",
@@ -73,6 +82,20 @@ export const HQX_ROUTES: HqxRoute[] = [
   },
   {
     method: "GET",
+    path: "/api/v1/agent-runs/:id",
+    mode: "json",
+    identity: "none",
+    url: (c) => `${B}/api/v1/agent-runs/${p(c, "id")}`,
+  },
+  {
+    method: "PATCH",
+    path: "/api/v1/agent-runs/:id",
+    mode: "json",
+    identity: "none",
+    url: (c) => `${B}/api/v1/agent-runs/${p(c, "id")}`,
+  },
+  {
+    method: "DELETE",
     path: "/api/v1/agent-runs/:id",
     mode: "json",
     identity: "none",

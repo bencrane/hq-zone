@@ -22,7 +22,7 @@
 import type { CurrentUser } from "../auth.ts";
 import { env } from "../env.ts";
 
-export type IdentityMode = "header" | "body" | "none";
+export type IdentityMode = "header" | "body" | "query" | "none";
 
 /** Service-token swap (always) + optional `X-User-Bearer` (header mode). */
 export function hqxHeaders(

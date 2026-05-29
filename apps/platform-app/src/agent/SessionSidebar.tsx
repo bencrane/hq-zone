@@ -19,10 +19,10 @@ import {
 import { Ellipsis, PanelLeft, PanelLeftClose, Plus } from "lucide-react";
 import { type KeyboardEvent, useState } from "react";
 
-import type { ChatSession } from "@/lib/agentSessions";
+import type { AgentRunSummary } from "@/lib/agentRuns";
 
 export interface SessionSidebarProps {
-  sessions: ChatSession[];
+  sessions: AgentRunSummary[];
   activeId: string | null;
   collapsed: boolean;
   onToggleCollapse: () => void;
@@ -45,7 +45,7 @@ export function SessionSidebar({
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
-  function startRename(s: ChatSession) {
+  function startRename(s: AgentRunSummary) {
     setRenamingId(s.id);
     setDraft(s.title);
   }
