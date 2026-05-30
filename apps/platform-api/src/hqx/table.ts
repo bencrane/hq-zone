@@ -25,7 +25,7 @@ export interface HqxRoute {
   identity: IdentityMode;
 }
 
-const B = env.BACKEND_X_API_URL;
+const B = env.HQ_X_API_URL;
 
 /** Encode a path param the route guarantees is present (it's a literal segment
  *  in `path`, so it always resolves at request time). */

@@ -4,7 +4,7 @@
  * body-injection logic that was copy-pasted across six route files.
  *
  * The BFF always presents the static service token as its OWN identity
- * (`Authorization: Bearer <BACKEND_X_SERVICE_TOKEN>`); hq-x verifies it with a
+ * (`Authorization: Bearer <HQ_X_SERVICE_TOKEN>`); hq-x verifies it with a
  * constant-time compare (see hq-x `app/auth/service_token.py`). The OPERATOR
  * identity is injected one of three ways, chosen per route:
  *
@@ -31,7 +31,7 @@ export function hqxHeaders(
   sendsJsonBody: boolean,
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${env.BACKEND_X_SERVICE_TOKEN}`,
+    Authorization: `Bearer ${env.HQ_X_SERVICE_TOKEN}`,
   };
   if (sendsJsonBody) headers["Content-Type"] = "application/json";
   if (identity === "header") headers["X-User-Bearer"] = `Bearer ${user.jwt}`;
