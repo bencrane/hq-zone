@@ -39,6 +39,7 @@ import OppsList from "./opportunities/OppsList";
 import { SignIn } from "./opportunities/SignIn";
 import Home from "./routes/Home";
 import MapDemo from "./routes/MapDemo";
+import ScheduledTasksList from "./scheduled-tasks/ScheduledTasksList";
 import SignalsPage from "./signals/SignalsPage";
 import FindCompaniesRoute from "./tables/FindCompaniesRoute";
 import TableView from "./tables/TableView";
@@ -174,6 +175,14 @@ export function App() {
           element={
             <RequireAuth>
               <CoveragePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/scheduled-tasks"
+          element={
+            <RequireAuth>
+              <ScheduledTasksList />
             </RequireAuth>
           }
         />

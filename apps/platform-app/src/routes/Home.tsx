@@ -1,9 +1,10 @@
 import {
   ArrowUpRight,
   Bot,
+  Clock,
   Crosshair,
-  LayoutGrid,
   Layers,
+  LayoutGrid,
   ListChecks,
   Radio,
   Send,
@@ -91,6 +92,13 @@ const TOOLS: Tool[] = [
       "GTM trigger registry. Author criteria over gtm.people, fire matched cohorts to webhooks. Modal cron evaluates active signals daily at 09:00 UTC.",
     icon: Radio,
     to: "/signals",
+  },
+  {
+    title: "Scheduled Tasks",
+    description:
+      "The Trigger.dev cron control plane — is every scheduled ingest firing? Per-task green/red/grey status, the Modal app or hq-x endpoint each drives, and one-click enable/disable.",
+    icon: Clock,
+    to: "/scheduled-tasks",
   },
 ];
 
