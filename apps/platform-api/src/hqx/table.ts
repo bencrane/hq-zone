@@ -251,4 +251,22 @@ export const HQX_ROUTES: HqxRoute[] = [
     identity: "header",
     url: (c) => `${B}/api/v1/gtm/views/${p(c, "id")}`,
   },
+
+  // ── scheduled-tasks: the Trigger.dev cron control plane (operator) ─────────
+  // GET lists the registry + computed status; PATCH toggles enable/disable +
+  // retags. PATCH uses body-injection so hq-x records the operator (disabled_by).
+  {
+    method: "GET",
+    path: "/api/v1/admin/scheduled-tasks",
+    mode: "json",
+    identity: "header",
+    url: () => `${B}/api/v1/admin/scheduled-tasks`,
+  },
+  {
+    method: "PATCH",
+    path: "/api/v1/admin/scheduled-tasks/:task_id",
+    mode: "json",
+    identity: "body",
+    url: (c) => `${B}/api/v1/admin/scheduled-tasks/${p(c, "task_id")}`,
+  },
 ];
