@@ -12,6 +12,7 @@ storybook-static
 coverage
 !apps/platform-app/src/coverage/
 .gstack/
+.claude/
 test-results
 playwright-report
 .playwright
