@@ -9,7 +9,7 @@ import {
   AlertDialog, Badge, Box, Button, Callout, Code, DropdownMenu, Flex, IconButton,
   SegmentedControl, Table, Text, TextField, Tooltip,
 } from "@radix-ui/themes";
-import { Check, Loader2, Pencil, Play, Trash2, X } from "lucide-react";
+import { Check, Loader2, Pencil, Play, Sparkles, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -31,6 +31,7 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
+import { AgentRunPanel } from "./AgentRunPanel";
 import "./SignalsPage.css";
 
 const KNOWN_KEY_LABELS: Record<string, string> = {
@@ -247,7 +248,7 @@ function RowActions({
   signalSlug,
   editing, saving, deleting, firing, hasChanges, error, fireError, fireResult,
   webhookTarget, hasTargetUrl,
-  onEdit, onSave, onCancel, onDelete, onFire,
+  onEdit, onSave, onCancel, onDelete, onFire, onRunAgent,
 }: {
   signalSlug: string;
   editing: boolean;
@@ -265,6 +266,7 @@ function RowActions({
   onCancel: () => void;
   onDelete: () => void;
   onFire: (limit: number | null) => void;
+  onRunAgent: () => void;
 }) {
   const fireDisabled = firing || editing || !hasTargetUrl;
   const fireTooltip = !hasTargetUrl
@@ -333,6 +335,15 @@ function RowActions({
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Root>
+              <Tooltip content="Run agent on this signal's cohort">
+                <IconButton
+                  size="2" variant="soft" color="iris"
+                  onClick={onRunAgent}
+                  aria-label="Run agent"
+                >
+                  <Sparkles size={16} />
+                </IconButton>
+              </Tooltip>
               <Tooltip content="Edit signal">
                 <IconButton
                   size="2" variant="soft" color="gray"
@@ -419,6 +430,10 @@ function SignalRow({
   const [error, setError] = useState<string | null>(null);
   const [fireError, setFireError] = useState<string | null>(null);
   const [fireResult, setFireResult] = useState<GtmSignalFireResult | null>(null);
+  // Each row owns its own agent-run drawer state. The drawer is keyed on
+  // the row's signal_slug so re-opening the same row mints a fresh session
+  // (per AgentRunPanel's no-reconnect v1 contract).
+  const [agentPanelOpen, setAgentPanelOpen] = useState(false);
 
   // If the row identity changes under us (rare — e.g. reload), drop the draft.
   useEffect(() => { setDraft({}); setError(null); }, [sig.signal_slug]);
@@ -536,6 +551,16 @@ function SignalRow({
           onCancel={handleCancel}
           onDelete={handleDelete}
           onFire={handleFire}
+          onRunAgent={() => setAgentPanelOpen(true)}
+        />
+        {/* Drawer rendered at the row level so each row owns its own panel
+            lifecycle; closing/aborting only affects this row's session. */}
+        <AgentRunPanel
+          open={agentPanelOpen}
+          onOpenChange={setAgentPanelOpen}
+          signalSlug={sig.signal_slug}
+          limit={50}
+          target="test"
         />
       </Table.Cell>
     </Table.Row>
