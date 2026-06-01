@@ -5,6 +5,7 @@ import {
   Crosshair,
   Layers,
   LayoutGrid,
+  LayoutTemplate,
   ListChecks,
   Radio,
   Send,
@@ -71,6 +72,13 @@ const TOOLS: Tool[] = [
       "Build an outbound campaign end-to-end: pick a list, author the message, and enroll into hq-x.",
     icon: Send,
     to: "/campaigns/new",
+  },
+  {
+    title: "Campaign Demo",
+    description:
+      "Live-call configurator: pick a dmaas scaffold, set brand + target entity, and watch the backend-solved mailpiece render. Toggle Mailer ⇄ Landing Page.",
+    icon: LayoutTemplate,
+    to: "/campaigns/demo",
   },
   {
     title: "Coverage",
