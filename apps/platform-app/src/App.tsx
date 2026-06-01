@@ -16,6 +16,7 @@
  *   `/opportunities/:notice_id`  → single opportunity detail (auth).
  *   `/leads`                     → read-only view over gtm.people (auth).
  *   `/campaigns/new`             → full-page campaign builder (auth).
+ *   `/campaigns/demo`            → campaign configurator & demo, 3-pane (auth).
  *   `/agent`                     → chat with the gtm-agent (auth).
  *   `/coverage`                  → datasets / bridges / intersections (auth).
  *   `/signals`                   → GTM trigger registry (ops.gtm_signals) monitor (auth).
@@ -27,6 +28,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import AgentChatPage from "./agent/AgentChatPage";
+import CampaignDemoView from "./campaign-demo/CampaignDemoView";
 import CampaignBuilder from "./campaigns/CampaignBuilder";
 import { HQBadge } from "./components/HQBadge";
 import CoveragePage from "./coverage/CoveragePage";
@@ -159,6 +161,14 @@ export function App() {
           element={
             <RequireAuth>
               <CampaignBuilder />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/campaigns/demo"
+          element={
+            <RequireAuth>
+              <CampaignDemoView />
             </RequireAuth>
           }
         />
