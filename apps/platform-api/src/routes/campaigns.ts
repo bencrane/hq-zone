@@ -2,12 +2,12 @@
  * Campaigns broker — orchestrates "enroll a list into a campaign" against
  * hq-x's atomic BFF endpoint (apps/hq-x/app/routers/bff_campaigns.py).
  *
- * One HTTP call: POST {HQ_X_API_URL}/api/v1/bff/campaigns/enroll-list
+ * One HTTP call: POST {HQX_API_URL}/api/v1/bff/campaigns/enroll-list
  * with the org/brand resolved from Doppler. The endpoint runs a single
  * transaction that lands campaign + channel_campaign + first step +
  * recipients + step memberships; partial failures roll back cleanly.
  *
- * Auth: HQ_X_SERVICE_TOKEN as Authorization. The BFF asserts its own
+ * Auth: HQX_SERVICE_TOKEN as Authorization. The BFF asserts its own
  * identity to hq-x; no per-user JWT is forwarded (single-operator model).
  *
  * Routes:
@@ -79,8 +79,8 @@ async function callBackendEnrollList(p: EnrollListPayload, userId: string): Prom
   if (p.email_body_html) channelSpecificConfig.body_html = p.email_body_html;
 
   const upstreamBody = {
-    organization_id: env.HX_DEFAULT_ORG_ID,
-    brand_id: env.HX_DEFAULT_BRAND_ID,
+    organization_id: env.HQX_DEFAULT_ORG_ID,
+    brand_id: env.HQX_DEFAULT_BRAND_ID,
     campaign_name: p.campaign_name,
     channel: p.channel,
     provider: p.provider,
@@ -109,11 +109,11 @@ async function callBackendEnrollList(p: EnrollListPayload, userId: string): Prom
     })),
   };
 
-  const upstreamUrl = `${env.HQ_X_API_URL}/api/v1/bff/campaigns/enroll-list`;
+  const upstreamUrl = `${env.HQX_API_URL}/api/v1/bff/campaigns/enroll-list`;
   const res = await fetch(upstreamUrl, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.HQ_X_SERVICE_TOKEN}`,
+      Authorization: `Bearer ${env.HQX_SERVICE_TOKEN}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(upstreamBody),
