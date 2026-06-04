@@ -8,16 +8,16 @@
  * lands back on the SPA, `detectSessionInUrl: true` parses the hash and
  * stores the session. No password forms, no third-party providers.
  */
+import type { Session } from "@supabase/supabase-js";
 import {
+  type ReactNode,
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
-import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "./supabase";
 
