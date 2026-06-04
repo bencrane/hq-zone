@@ -6,13 +6,11 @@
  *
  *   1. marketing-site (5174) — the homepage renders, the "RARE STRUCTURE"
  *      wordmark is present, and the page loads with zero console errors.
- *   2. platform-app (5173) — the market cockpit: the US map renders (real
- *      state-path geometry in the DOM), ⌘K runs a map-query that lights up
- *      company dots, clicking a dot opens its callout (and the callout opens
- *      the full profile with Capital Catalysts), and an aggregate command
- *      swaps the map for the chart.
+ *   2. platform-app (5173) — the HQ home grid renders its tool cards, and
+ *      clicking a tool routes into its gated page, where the auth gate resolves
+ *      to the SignIn surface (no session) instead of hanging on a blank page.
  *
- * Screenshots of the homepage and each cockpit step are written to
+ * Screenshots of the homepage and each platform step are written to
  * `test-results/` (gitignored).
  */
 
@@ -25,9 +23,7 @@ const SHOTS = "test-results";
 // marketing-site — the homepage.
 // ───────────────────────────────────────────────────────────────────
 
-test("marketing-site homepage renders the wordmark with zero console errors", async ({
-  page,
-}) => {
+test("marketing-site homepage renders the wordmark with zero console errors", async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on("console", (msg) => {
     if (msg.type() === "error") consoleErrors.push(msg.text());
@@ -49,10 +45,10 @@ test("marketing-site homepage renders the wordmark with zero console errors", as
 });
 
 // ───────────────────────────────────────────────────────────────────
-// platform-app — the market cockpit.
+// platform-app — the HQ home grid + auth gate.
 // ───────────────────────────────────────────────────────────────────
 
-test("platform-app cockpit runs the ⌘K query → profile → aggregate loop", async ({
+test("platform-app home renders the HQ tool grid and routes into a gated tool", async ({
   page,
 }) => {
   const consoleErrors: string[] = [];
@@ -61,71 +57,36 @@ test("platform-app cockpit runs the ⌘K query → profile → aggregate loop", 
   });
   page.on("pageerror", (err) => consoleErrors.push(err.message));
 
-  // ── The map — the cockpit's home surface ──────────────────────────
-  await page.goto(`${PLATFORM_URL}/`, { waitUntil: "networkidle" });
+  // ── The HQ home grid — the platform-app's home surface ────────────
+  await page.goto(`${PLATFORM_URL}/`, { waitUntil: "domcontentloaded" });
 
-  // The cockpit starts on the `map` view.
-  const cockpit = page.locator("[data-cockpit-view]");
-  await expect(cockpit).toHaveAttribute("data-cockpit-view", "map");
+  // The home heading + the "Internal tools." subtitle. The corner "HQ" badge
+  // is a <div>, so scope to the <h1> to stay unambiguous.
+  await expect(page.getByRole("heading", { level: 1, name: "HQ" })).toBeVisible();
+  await expect(page.getByText("Internal tools.")).toBeVisible();
 
-  // Real US geography — state-path geometry in the DOM. The map renders 51
-  // states across three SVG layers (fill + border + edge), so well over 50
-  // <path> elements is the geometry tell vs. a geometry-free dot blob.
-  const statePaths = page.locator("svg path");
-  await expect(async () => {
-    expect(await statePaths.count()).toBeGreaterThan(50);
-  }).toPass();
+  // A representative spread of the tool cards renders (each is an <h2>).
+  for (const tool of [
+    "GTM Agent",
+    "Lists",
+    "Govt Leads",
+    "Coverage",
+    "Signals",
+    "Scheduled Tasks",
+  ]) {
+    await expect(page.getByRole("heading", { name: tool })).toBeVisible();
+  }
 
-  await page.screenshot({ path: `${SHOTS}/cockpit-1-map.png`, fullPage: true });
+  await page.screenshot({ path: `${SHOTS}/platform-home.png`, fullPage: true });
 
-  // ── Run a map-query command via the ⌘K palette ────────────────────
-  await page.getByRole("button", { name: /query the market/i }).click();
-  const palette = page.locator('[role="dialog"][aria-label="Cockpit command palette"]');
-  await expect(palette).toBeVisible();
+  // ── Click a tool → its gated route → the SignIn surface ───────────
+  // Each card is a <Link>; with no session the auth gate resolves to SignIn
+  // (not a blank page — see e2e/auth-gate.spec.ts for the regression it guards).
+  await page.getByRole("link", { name: /Govt Leads/ }).click();
+  await expect(page).toHaveURL(/\/opportunities$/);
+  await expect(page.getByPlaceholder("you@example.com")).toBeVisible();
 
-  await page.getByRole("button", { name: /companies in heavy construction/i }).click();
-  await expect(palette).toBeHidden();
-
-  // The query lights up the map with clickable company dots — the entrance
-  // animation fades them in, so poll until the point groups are present.
-  const companyDots = page.locator('svg g[role="button"]');
-  await expect(async () => {
-    expect(await companyDots.count()).toBeGreaterThan(0);
-  }).toPass({ timeout: 15_000 });
-
-  await page.screenshot({ path: `${SHOTS}/cockpit-2-query.png`, fullPage: true });
-
-  // ── Click a company dot → its callout → the profile drawer ────────
-  // SVG <g> elements overlap the land-fill <path> geometry, so a positional
-  // click is intercepted — dispatch the click event directly. A single click
-  // opens the on-map callout; clicking the callout opens the full profile.
-  await companyDots.first().dispatchEvent("click");
-  const callout = page.locator('svg g[role="button"][aria-label^="Open profile"]');
-  await expect(callout.first()).toBeVisible();
-
-  await callout.first().dispatchEvent("click");
-  const profile = page.getByRole("dialog", { name: /^Profile/ });
-  await expect(profile).toBeVisible();
-  await expect(profile.getByText("Capital Catalysts")).toBeVisible();
-
-  await page.screenshot({ path: `${SHOTS}/cockpit-3-profile.png`, fullPage: true });
-
-  await page.keyboard.press("Escape");
-  await expect(profile).toBeHidden();
-
-  // ── Run an aggregate command → the chart view ─────────────────────
-  await page.getByRole("button", { name: /query the market/i }).click();
-  await expect(palette).toBeVisible();
-  await page
-    .getByRole("button", { name: /aggregate federal contract spend by industry/i })
-    .click();
-
-  await expect(cockpit).toHaveAttribute("data-cockpit-view", "aggregate");
-  await expect(
-    page.getByRole("heading", { name: /federal contract spend by industry/i }),
-  ).toBeVisible();
-
-  await page.screenshot({ path: `${SHOTS}/cockpit-4-aggregate.png`, fullPage: true });
+  await page.screenshot({ path: `${SHOTS}/platform-signin.png`, fullPage: true });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(" | ")}`).toEqual([]);
 });
