@@ -35,18 +35,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
+    let released = false;
+
+    // Clear `loading` exactly once. RequireAuth renders nothing while loading
+    // is true, so if this never runs, every gated route is a blank page that
+    // shows only the HQ badge. getSession() can fail to settle two ways — it
+    // can reject (corrupt stored token, auth-js internal error) or hang (the
+    // Supabase navigator-LockManager deadlocks when another tab holds the auth
+    // lock, or a token refresh stalls). The original code (a bare `.then`)
+    // handled neither, so either one pinned `loading` true forever.
+    const release = () => {
+      if (!mounted || released) return;
+      released = true;
       setLoading(false);
-    });
+    };
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (mounted) setSession(data.session);
+      })
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error("auth: getSession() rejected — falling through to sign-in", err);
+      })
+      .finally(release);
+
+    // Safety net for the hang case: `.finally` never fires on a promise that
+    // never settles, so release the gate after a few seconds regardless. The
+    // user lands on SignIn instead of an infinite blank; a late getSession or
+    // an onAuthStateChange event still populates `session` and routes them in.
+    const releaseTimer = setTimeout(release, 5000);
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      if (!mounted) return;
       setSession(sess);
+      release();
     });
 
     return () => {
       mounted = false;
+      clearTimeout(releaseTimer);
       sub.subscription.unsubscribe();
     };
   }, []);
