@@ -6,9 +6,9 @@
  */
 import { useCallback, useEffect, useState } from "react";
 
-import { Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
-import { searchOpps, type OppRow, type SearchFilters } from "@/lib/api";
+import { type OppRow, type SearchFilters, searchOpps } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 import { FilterBar } from "./FilterBar";
 import { OppsTable } from "./OppsTable";
 import { PAGE_SIZES } from "./constants";
@@ -128,10 +128,7 @@ export default function OppsList() {
         </Inline>
 
         {err && (
-          <Text
-            size="body-sm"
-            className="text-[color:var(--color-state-error)]"
-          >
+          <Text size="body-sm" className="text-[color:var(--color-state-error)]">
             {err}
           </Text>
         )}

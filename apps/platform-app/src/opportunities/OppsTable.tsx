@@ -5,8 +5,8 @@
  */
 import { useNavigate } from "react-router-dom";
 
-import { Badge, Box, Text } from "@rare-structure-hq/ui";
 import type { OppRow } from "@/lib/api";
+import { Badge, Box, Text } from "@rare-structure-hq/ui";
 
 interface OppsTableProps {
   rows: OppRow[];
@@ -64,6 +64,7 @@ export function OppsTable({ rows, loading }: OppsTableProps) {
         </thead>
         <tbody>
           {rows.map((r) => (
+            // biome-ignore lint/a11y/useKeyWithClickEvents: pre-existing click-to-navigate row; adding a row-level keyboard handler would change runtime behavior (out of scope for this lint-debt sweep).
             <tr
               key={r.notice_id}
               onClick={() => navigate(`/opportunities/${r.notice_id}`)}

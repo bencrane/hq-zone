@@ -52,6 +52,7 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deps are intentionally the filter values only — the effect re-debounces on input change, not on `onApply` identity. Adding `onApply` would re-fire the debounce on every parent render if the callback isn't memoized.
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -131,8 +132,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Text>
 
           <Stack gap="1">
-            <label className={labelClass}>Name</label>
+            <label className={labelClass} htmlFor="tam-name">
+              Name
+            </label>
             <input
+              id="tam-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -142,8 +146,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>Title</label>
+            <label className={labelClass} htmlFor="tam-title">
+              Title
+            </label>
             <input
+              id="tam-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -153,8 +160,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>Seniority</label>
+            <label className={labelClass} htmlFor="tam-seniority">
+              Seniority
+            </label>
             <select
+              id="tam-seniority"
               value={seniority}
               onChange={(e) => setSeniority(e.target.value)}
               className={inputClass}
@@ -169,8 +179,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>Function</label>
+            <label className={labelClass} htmlFor="tam-function">
+              Function
+            </label>
             <select
+              id="tam-function"
               value={fn}
               onChange={(e) => setFn(e.target.value)}
               className={inputClass}
@@ -185,8 +198,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>Person state</label>
+            <label className={labelClass} htmlFor="tam-person-state">
+              Person state
+            </label>
             <select
+              id="tam-person-state"
               value={personState}
               onChange={(e) => setPersonState(e.target.value)}
               className={inputClass}
@@ -208,8 +224,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Text>
 
           <Stack gap="1">
-            <label className={labelClass}>Company name</label>
+            <label className={labelClass} htmlFor="tam-company-name">
+              Company name
+            </label>
             <input
+              id="tam-company-name"
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
@@ -219,8 +238,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>Industry</label>
+            <label className={labelClass} htmlFor="tam-industry">
+              Industry
+            </label>
             <select
+              id="tam-industry"
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
               className={inputClass}
@@ -235,8 +257,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>Employees</label>
+            <label className={labelClass} htmlFor="tam-employees">
+              Employees
+            </label>
             <select
+              id="tam-employees"
               value={employeeBand}
               onChange={(e) => setEmployeeBand(e.target.value)}
               className={inputClass}
@@ -251,8 +276,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>Est. revenue</label>
+            <label className={labelClass} htmlFor="tam-revenue">
+              Est. revenue
+            </label>
             <select
+              id="tam-revenue"
               value={revenueBand}
               onChange={(e) => setRevenueBand(e.target.value)}
               className={inputClass}
@@ -267,8 +295,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>HQ state</label>
+            <label className={labelClass} htmlFor="tam-hq-state">
+              HQ state
+            </label>
             <select
+              id="tam-hq-state"
               value={hqState}
               onChange={(e) => setHqState(e.target.value)}
               className={inputClass}
@@ -283,8 +314,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
           </Stack>
 
           <Stack gap="1">
-            <label className={labelClass}>HQ city</label>
+            <label className={labelClass} htmlFor="tam-hq-city">
+              HQ city
+            </label>
             <input
+              id="tam-hq-city"
               type="text"
               value={hqLocality}
               onChange={(e) => setHqLocality(e.target.value)}
@@ -295,8 +329,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
           <Inline gap="2">
             <Stack gap="1" unsafe_className="flex-1">
-              <label className={labelClass}>Founded (from)</label>
+              <label className={labelClass} htmlFor="tam-founded-from">
+                Founded (from)
+              </label>
               <input
+                id="tam-founded-from"
                 type="number"
                 value={foundedMin}
                 onChange={(e) => setFoundedMin(e.target.value.replace(/[^0-9]/g, ""))}
@@ -305,8 +342,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
               />
             </Stack>
             <Stack gap="1" unsafe_className="flex-1">
-              <label className={labelClass}>Founded (to)</label>
+              <label className={labelClass} htmlFor="tam-founded-to">
+                Founded (to)
+              </label>
               <input
+                id="tam-founded-to"
                 type="number"
                 value={foundedMax}
                 onChange={(e) => setFoundedMax(e.target.value.replace(/[^0-9]/g, ""))}

@@ -8,7 +8,10 @@ const CONFIDENCE_COLORS = {
   high: "grass",
 } as const;
 
-export function RecommendationCard({ payload, title }: { payload: RecommendationCardPayload; title?: string }) {
+export function RecommendationCard({
+  payload,
+  title,
+}: { payload: RecommendationCardPayload; title?: string }) {
   return (
     <Card variant="surface">
       <Flex align="center" justify="between" mb="2">
@@ -19,21 +22,34 @@ export function RecommendationCard({ payload, title }: { payload: Recommendation
       </Flex>
 
       <Box mb="3">
-        <Text as="div" size="1" color="gray">Decision</Text>
-        <Text as="div" size="4" weight="bold">{payload.decision}</Text>
+        <Text as="div" size="1" color="gray">
+          Decision
+        </Text>
+        <Text as="div" size="4" weight="bold">
+          {payload.decision}
+        </Text>
       </Box>
 
       <Box mb="3">
-        <Text as="div" size="1" color="gray">Rationale</Text>
-        <Text as="div" size="2">{payload.rationale}</Text>
+        <Text as="div" size="1" color="gray">
+          Rationale
+        </Text>
+        <Text as="div" size="2">
+          {payload.rationale}
+        </Text>
       </Box>
 
       {payload.inputs_used.length > 0 ? (
         <Box mb="3">
-          <Text as="div" size="1" color="gray" mb="1">Inputs used</Text>
+          <Text as="div" size="1" color="gray" mb="1">
+            Inputs used
+          </Text>
           <Flex gap="1" wrap="wrap">
             {payload.inputs_used.map((s, i) => (
-              <Badge key={i} variant="soft" color="gray">{s}</Badge>
+              // biome-ignore lint/suspicious/noArrayIndexKey: static render-once agent-payload list with no stable per-item id; never reordered, so the array index is a safe key.
+              <Badge key={i} variant="soft" color="gray">
+                {s}
+              </Badge>
             ))}
           </Flex>
         </Box>
@@ -41,10 +57,15 @@ export function RecommendationCard({ payload, title }: { payload: Recommendation
 
       {payload.next_actions && payload.next_actions.length > 0 ? (
         <Box>
-          <Text as="div" size="1" color="gray" mb="1">Next actions</Text>
+          <Text as="div" size="1" color="gray" mb="1">
+            Next actions
+          </Text>
           <ol style={{ margin: 0, paddingLeft: "1.25rem" }}>
             {payload.next_actions.map((s, i) => (
-              <li key={i}><Text size="2">{s}</Text></li>
+              // biome-ignore lint/suspicious/noArrayIndexKey: static render-once agent-payload list with no stable per-item id; never reordered, so the array index is a safe key.
+              <li key={i}>
+                <Text size="2">{s}</Text>
+              </li>
             ))}
           </ol>
         </Box>

@@ -7,8 +7,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import { type OppRow, getOppDetail } from "@/lib/api";
 import { Badge, Box, Button, Card, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
-import { getOppDetail, type OppRow } from "@/lib/api";
 
 function fmtDate(d: string | null | undefined): string {
   if (!d) return "—";

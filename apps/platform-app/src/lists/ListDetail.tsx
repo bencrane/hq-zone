@@ -7,19 +7,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  deleteList,
-  getList,
-  removeFromList,
-  subscribe,
-  type LeadList,
-} from "@/lib/leadLists";
-import { TAM_FIXTURE } from "@/tam/fixture";
-import { EMPLOYEE_BANDS, SENIORITY_BANDS } from "@/tam/constants";
 import { SendToCampaignDialog } from "@/campaigns/SendToCampaignDialog";
 import type { EnrollRecipientInput } from "@/campaigns/api";
+import { Checkbox } from "@/components/ui/checkbox";
+import { type LeadList, deleteList, getList, removeFromList, subscribe } from "@/lib/leadLists";
+import { EMPLOYEE_BANDS, SENIORITY_BANDS } from "@/tam/constants";
+import { TAM_FIXTURE } from "@/tam/fixture";
+import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 
 const seniorityLabel = new Map(SENIORITY_BANDS.map((b) => [b.value, b.label]));
 const employeeLabel = new Map(EMPLOYEE_BANDS.map((b) => [b.value, b.label]));
@@ -32,9 +26,7 @@ function truncate(s: string | null, n: number): string {
 export default function ListDetail() {
   const { list_id: listId } = useParams<{ list_id: string }>();
   const navigate = useNavigate();
-  const [list, setList] = useState<LeadList | null>(() =>
-    listId ? getList(listId) : null,
-  );
+  const [list, setList] = useState<LeadList | null>(() => (listId ? getList(listId) : null));
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [sendOpen, setSendOpen] = useState(false);
@@ -118,11 +110,7 @@ export default function ListDetail() {
   }
 
   const headerState: boolean | "indeterminate" =
-    selected.size === 0
-      ? false
-      : selected.size === members.length
-      ? true
-      : "indeterminate";
+    selected.size === 0 ? false : selected.size === members.length ? true : "indeterminate";
 
   return (
     <Page variant="wide">
@@ -136,11 +124,7 @@ export default function ListDetail() {
             </Link>
           </Inline>
           <Inline gap="2" align="center">
-            <Button
-              size="sm"
-              onClick={() => setSendOpen(true)}
-              disabled={members.length === 0}
-            >
+            <Button size="sm" onClick={() => setSendOpen(true)} disabled={members.length === 0}>
               Send to campaign
             </Button>
             <Button variant="ghost" size="sm" onClick={handleDelete}>
@@ -170,11 +154,7 @@ export default function ListDetail() {
             <Button size="sm" variant="secondary" onClick={handleRemove}>
               Remove from list
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelected(new Set())}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>
               Clear
             </Button>
           </Inline>
@@ -212,15 +192,14 @@ export default function ListDetail() {
                 {members.map((r) => {
                   const isSelected = selected.has(r.person_id);
                   return (
+                    // biome-ignore lint/a11y/useKeyWithClickEvents: pre-existing click-to-navigate row; adding a row-level keyboard handler would change runtime behavior (out of scope for this lint-debt sweep).
                     <tr
                       key={r.person_id}
                       onClick={() => navigate(`/tam/${r.person_id}`)}
                       className="cursor-pointer border-b border-[color:var(--color-border-subtle)] last:border-0 hover:bg-[color:var(--color-surface-raised)]"
                     >
-                      <td
-                        className="px-3 py-2"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: onClick only stops propagation so the checkbox cell doesn't trigger row navigation; there is no keyboard interaction to handle. */}
+                      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={(v) => toggleOne(r.person_id, v)}
@@ -245,13 +224,13 @@ export default function ListDetail() {
                       </td>
                       <td className="px-3 py-2 font-mono text-mono-xs">
                         {r.employee_band
-                          ? employeeLabel.get(r.employee_band) ?? r.employee_band
+                          ? (employeeLabel.get(r.employee_band) ?? r.employee_band)
                           : "—"}
                       </td>
                       <td className="px-3 py-2 font-mono text-mono-xs text-[color:var(--color-text-muted)]">
                         {r.person_locality
                           ? `${r.person_locality}, ${r.person_state ?? "—"}`
-                          : r.person_state ?? "—"}
+                          : (r.person_state ?? "—")}
                       </td>
                     </tr>
                   );

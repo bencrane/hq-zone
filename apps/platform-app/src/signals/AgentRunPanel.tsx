@@ -48,7 +48,13 @@ const INITIAL_STATE: PanelState = {
   interruptInFlight: false,
 };
 
-export function AgentRunPanel({ open, onOpenChange, signalSlug, limit = 50, target = "test" }: AgentRunPanelProps) {
+export function AgentRunPanel({
+  open,
+  onOpenChange,
+  signalSlug,
+  limit = 50,
+  target = "test",
+}: AgentRunPanelProps) {
   const [state, setState] = useState<PanelState>(INITIAL_STATE);
   // Stable container for the stream's AbortController so we can hit Stop
   // from the left lane and clean up on unmount without re-creating
@@ -71,7 +77,11 @@ export function AgentRunPanel({ open, onOpenChange, signalSlug, limit = 50, targ
         session = await createAgentRunFromSignal({ signal_slug: signalSlug, limit, target });
       } catch (err) {
         if (cancelled) return;
-        setState((s) => ({ ...s, mintError: err instanceof Error ? err.message : String(err), status: { type: "session.error", detail: "mint failed" } }));
+        setState((s) => ({
+          ...s,
+          mintError: err instanceof Error ? err.message : String(err),
+          status: { type: "session.error", detail: "mint failed" },
+        }));
         return;
       }
       if (cancelled) return;
@@ -90,7 +100,10 @@ export function AgentRunPanel({ open, onOpenChange, signalSlug, limit = 50, targ
         if (cancelled || abort.signal.aborted) return;
         setState((s) => ({
           ...s,
-          status: { type: "session.error", detail: err instanceof Error ? err.message : String(err) },
+          status: {
+            type: "session.error",
+            detail: err instanceof Error ? err.message : String(err),
+          },
         }));
       }
     })();
@@ -123,12 +136,23 @@ export function AgentRunPanel({ open, onOpenChange, signalSlug, limit = 50, targ
 
   return (
     <Dialog.Root open={open} onOpenChange={(o) => (o ? onOpenChange(true) : handleClose())}>
-      <Dialog.Content maxWidth="1200px" style={{ width: "min(95vw, 1200px)", height: "85vh", padding: 0 }}>
+      <Dialog.Content
+        maxWidth="1200px"
+        style={{ width: "min(95vw, 1200px)", height: "85vh", padding: 0 }}
+      >
         <Flex direction="row" height="100%">
           {/* ── LEFT LANE: user controls only ───────────────────────────── */}
-          <Box width="320px" p="4" style={{ borderRight: "1px solid var(--gray-a4)", overflowY: "auto" }}>
-            <Heading size="3" mb="1">Run agent</Heading>
-            <Text as="div" size="1" color="gray" mb="3">on signal</Text>
+          <Box
+            width="320px"
+            p="4"
+            style={{ borderRight: "1px solid var(--gray-a4)", overflowY: "auto" }}
+          >
+            <Heading size="3" mb="1">
+              Run agent
+            </Heading>
+            <Text as="div" size="1" color="gray" mb="3">
+              on signal
+            </Text>
             <Box mb="3">
               <Code size="2">{signalSlug}</Code>
             </Box>
@@ -136,31 +160,47 @@ export function AgentRunPanel({ open, onOpenChange, signalSlug, limit = 50, targ
             <Separator size="4" my="3" />
 
             <Box mb="3">
-              <Text as="div" size="1" color="gray">target</Text>
-              <Badge color={target === "prod" ? "tomato" : "gray"} variant="soft">{target}</Badge>
+              <Text as="div" size="1" color="gray">
+                target
+              </Text>
+              <Badge color={target === "prod" ? "tomato" : "gray"} variant="soft">
+                {target}
+              </Badge>
             </Box>
             <Box mb="3">
-              <Text as="div" size="1" color="gray">limit</Text>
+              <Text as="div" size="1" color="gray">
+                limit
+              </Text>
               <Text size="2">{limit}</Text>
             </Box>
 
             {sessionId ? (
               <Box mb="3">
-                <Text as="div" size="1" color="gray">session</Text>
-                <Code size="1" style={{ wordBreak: "break-all" }}>{sessionId}</Code>
+                <Text as="div" size="1" color="gray">
+                  session
+                </Text>
+                <Code size="1" style={{ wordBreak: "break-all" }}>
+                  {sessionId}
+                </Code>
               </Box>
             ) : null}
 
             {state.session?.agent_id ? (
               <Box mb="3">
-                <Text as="div" size="1" color="gray">agent</Text>
-                <Code size="1" style={{ wordBreak: "break-all" }}>{state.session.agent_id}</Code>
+                <Text as="div" size="1" color="gray">
+                  agent
+                </Text>
+                <Code size="1" style={{ wordBreak: "break-all" }}>
+                  {state.session.agent_id}
+                </Code>
               </Box>
             ) : null}
 
             {state.mintError ? (
               <Box mb="3">
-                <Text size="1" color="tomato">{state.mintError}</Text>
+                <Text size="1" color="tomato">
+                  {state.mintError}
+                </Text>
               </Box>
             ) : null}
 
@@ -175,7 +215,9 @@ export function AgentRunPanel({ open, onOpenChange, signalSlug, limit = 50, targ
               >
                 {state.interruptInFlight ? "Stopping…" : "Stop ⏸"}
               </Button>
-              <Button variant="soft" color="gray" onClick={handleClose}>Close</Button>
+              <Button variant="soft" color="gray" onClick={handleClose}>
+                Close
+              </Button>
             </Flex>
           </Box>
 
@@ -196,7 +238,8 @@ function nextStatus(prev: TimelineStatus | null, ev: AgentRunEvent): TimelineSta
     case "session.status_running":
       return { type: "session.status_running" };
     case "session.status_idle": {
-      const sr = (ev as { stop_reason?: { type?: string; event_ids?: string[] } | null }).stop_reason;
+      const sr = (ev as { stop_reason?: { type?: string; event_ids?: string[] } | null })
+        .stop_reason;
       let detail: string | undefined;
       if (sr?.type) {
         detail = `stop_reason: ${sr.type}`;
@@ -221,6 +264,9 @@ function nextStatus(prev: TimelineStatus | null, ev: AgentRunEvent): TimelineSta
 
 function isTerminal(s: TimelineStatus | null): boolean {
   if (!s) return false;
-  return s.type === "session.status_terminated" || s.type === "session.error" ||
-    (s.type === "session.status_idle" && (s.detail?.startsWith("stop_reason: end_turn") ?? false));
+  return (
+    s.type === "session.status_terminated" ||
+    s.type === "session.error" ||
+    (s.type === "session.status_idle" && (s.detail?.startsWith("stop_reason: end_turn") ?? false))
+  );
 }

@@ -5,8 +5,8 @@
  */
 import { useNavigate } from "react-router-dom";
 
-import { Box, Text } from "@rare-structure-hq/ui";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Box, Text } from "@rare-structure-hq/ui";
 import type { TamRow } from "./api";
 import { EMPLOYEE_BANDS, SENIORITY_BANDS } from "./constants";
 
@@ -25,12 +25,7 @@ function truncate(s: string | null, n: number): string {
   return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }
 
-export function TamTable({
-  rows,
-  loading,
-  selected,
-  onSelectionChange,
-}: TamTableProps) {
+export function TamTable({ rows, loading, selected, onSelectionChange }: TamTableProps) {
   const navigate = useNavigate();
 
   if (loading) {
@@ -56,18 +51,14 @@ export function TamTable({
   const pageIds = rows.map((r) => r.person_id);
   const selectedOnPage = pageIds.filter((id) => selected.has(id)).length;
   const headerState: boolean | "indeterminate" =
-    selectedOnPage === 0
-      ? false
-      : selectedOnPage === pageIds.length
-      ? true
-      : "indeterminate";
+    selectedOnPage === 0 ? false : selectedOnPage === pageIds.length ? true : "indeterminate";
 
   function toggleAll(next: boolean | "indeterminate") {
     const copy = new Set(selected);
     if (next === true) {
-      pageIds.forEach((id) => copy.add(id));
+      for (const id of pageIds) copy.add(id);
     } else {
-      pageIds.forEach((id) => copy.delete(id));
+      for (const id of pageIds) copy.delete(id);
     }
     onSelectionChange(copy);
   }
@@ -105,15 +96,14 @@ export function TamTable({
           {rows.map((r) => {
             const isSelected = selected.has(r.person_id);
             return (
+              // biome-ignore lint/a11y/useKeyWithClickEvents: pre-existing click-to-navigate row; adding a row-level keyboard handler would change runtime behavior (out of scope for this lint-debt sweep).
               <tr
                 key={r.person_id}
                 onClick={() => navigate(`/tam/${r.person_id}`)}
                 className="cursor-pointer border-b border-[color:var(--color-border-subtle)] last:border-0 hover:bg-[color:var(--color-surface-raised)]"
               >
-                <td
-                  className="px-3 py-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                {/* biome-ignore lint/a11y/useKeyWithClickEvents: onClick only stops propagation so the checkbox cell doesn't trigger row navigation; there is no keyboard interaction to handle. */}
+                <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={isSelected}
                     onCheckedChange={(v) => toggleOne(r.person_id, v)}
@@ -137,12 +127,12 @@ export function TamTable({
                   {truncate(r.industry, 22)}
                 </td>
                 <td className="px-3 py-2 font-mono text-mono-xs">
-                  {r.employee_band ? employeeLabel.get(r.employee_band) ?? r.employee_band : "—"}
+                  {r.employee_band ? (employeeLabel.get(r.employee_band) ?? r.employee_band) : "—"}
                 </td>
                 <td className="px-3 py-2 font-mono text-mono-xs text-[color:var(--color-text-muted)]">
                   {r.person_locality
                     ? `${r.person_locality}, ${r.person_state ?? "—"}`
-                    : r.person_state ?? "—"}
+                    : (r.person_state ?? "—")}
                 </td>
               </tr>
             );

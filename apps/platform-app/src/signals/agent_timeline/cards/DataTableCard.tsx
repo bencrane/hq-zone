@@ -6,7 +6,11 @@ function formatCell(v: unknown, t: DataTableColumnType): string {
   if (v === null || v === undefined) return "—";
   if (t === "boolean") return v ? "true" : "false";
   if (t === "currency" && typeof v === "number") {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v);
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(v);
   }
   if (t === "number" && typeof v === "number") {
     return new Intl.NumberFormat("en-US").format(v);
@@ -26,7 +30,8 @@ export function DataTableCard({ payload, title }: { payload: DataTablePayload; t
       <Box mb="2">
         <Heading size="3">{title ?? "Table"}</Heading>
         <Text as="div" size="1" color="gray">
-          {rows.length} rows{payload.total_rows !== undefined && payload.total_rows > rows.length
+          {rows.length} rows
+          {payload.total_rows !== undefined && payload.total_rows > rows.length
             ? ` (of ${payload.total_rows})`
             : ""}
           {payload.source ? ` · source: ${payload.source}` : ""}
@@ -39,13 +44,16 @@ export function DataTableCard({ payload, title }: { payload: DataTablePayload; t
               {cols.map((c) => (
                 <Table.ColumnHeaderCell key={c.key}>
                   {c.label}
-                  <Badge ml="1" size="1" color="gray" variant="soft">{c.type}</Badge>
+                  <Badge ml="1" size="1" color="gray" variant="soft">
+                    {c.type}
+                  </Badge>
                 </Table.ColumnHeaderCell>
               ))}
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {rows.map((r, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static render-once agent-payload rows with no stable id; never reordered, so the array index is a safe key.
               <Table.Row key={i}>
                 {cols.map((c) => (
                   <Table.Cell key={c.key}>{formatCell(r[c.key], c.type)}</Table.Cell>

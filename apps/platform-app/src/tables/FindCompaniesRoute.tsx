@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 /**
  * Find Companies — criteria-driven search route at `/find/companies`.
  *
@@ -19,19 +20,13 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TAM_FIXTURE } from "@/tam/fixture";
 import {
-  EMPLOYEE_BANDS,
-  INDUSTRIES,
-  REVENUE_BANDS,
-  US_STATES,
-} from "@/tam/constants";
-import {
+  type Column,
+  type Row,
   addRows,
   createTable,
   getTable,
@@ -39,10 +34,10 @@ import {
   newCellEmpty,
   newColumnId,
   newRowId,
-  type Column,
-  type Row,
 } from "@/lib/tables";
 import { ensureDefaultWorkbook, getWorkbook } from "@/lib/workbooks";
+import { EMPLOYEE_BANDS, INDUSTRIES, REVENUE_BANDS, US_STATES } from "@/tam/constants";
+import { TAM_FIXTURE } from "@/tam/fixture";
 
 interface CompanyHit {
   company_id: string;
@@ -109,11 +104,12 @@ function uniqueCompanies(): CompanyHit[] {
   const byId = new Map<string, CompanyHit>();
   for (const r of TAM_FIXTURE) {
     if (byId.has(r.company_id)) continue;
-    const desc = `${r.company_name} is a ${r.industry?.toLowerCase() ?? "private"} company based in ${
-      r.company_hq_locality ?? "the US"
-    }. ${r.employee_band ? `Employees: ${r.employee_band}.` : ""} ${
-      r.founded_year ? `Founded in ${r.founded_year}.` : ""
-    }`.trim();
+    const desc =
+      `${r.company_name} is a ${r.industry?.toLowerCase() ?? "private"} company based in ${
+        r.company_hq_locality ?? "the US"
+      }. ${r.employee_band ? `Employees: ${r.employee_band}.` : ""} ${
+        r.founded_year ? `Founded in ${r.founded_year}.` : ""
+      }`.trim();
     byId.set(r.company_id, {
       company_id: r.company_id,
       company_name: r.company_name,
@@ -160,12 +156,18 @@ function matches(c: CompanyHit, q: Criteria): boolean {
     if (!Number.isNaN(m) && (c.founded_year ?? 9999) > m) return false;
   }
   if (q.desc_include) {
-    const needles = q.desc_include.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+    const needles = q.desc_include
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
     const hay = `${c.company_name} ${c.description}`.toLowerCase();
     if (!needles.every((n) => hay.includes(n))) return false;
   }
   if (q.desc_exclude) {
-    const needles = q.desc_exclude.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+    const needles = q.desc_exclude
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
     const hay = `${c.company_name} ${c.description}`.toLowerCase();
     if (needles.some((n) => hay.includes(n))) return false;
   }
@@ -278,14 +280,11 @@ export default function FindCompaniesRoute() {
   // Resolve the workbook: explicit ?workbook=…, else the intoTable's
   // workbook, else the default. Workbooks are always required now.
   const workbookFromParam = params.get("workbook") ?? undefined;
-  const workbookId =
-    workbookFromParam ?? intoTable?.workbook_id ?? ensureDefaultWorkbook().id;
+  const workbookId = workbookFromParam ?? intoTable?.workbook_id ?? ensureDefaultWorkbook().id;
   const workbook = getWorkbook(workbookId);
 
   const [criteria, setCriteria] = useState<Criteria>(EMPTY_CRITERIA);
-  const [destination, setDestination] = useState<"new" | string>(
-    intoTableId ?? "new",
-  );
+  const [destination, setDestination] = useState<"new" | string>(intoTableId ?? "new");
   const [newTableName, setNewTableName] = useState("");
 
   useEffect(() => {
@@ -363,10 +362,7 @@ export default function FindCompaniesRoute() {
       set("industry", c.industry);
       set("employees", c.employee_band);
       set("revenue", c.revenue_band);
-      set(
-        "hq",
-        c.hq_locality && c.hq_state ? `${c.hq_locality}, ${c.hq_state}` : c.hq_state,
-      );
+      set("hq", c.hq_locality && c.hq_state ? `${c.hq_locality}, ${c.hq_state}` : c.hq_state);
       set("founded", c.founded_year);
       set("description", c.description);
       for (const col of existing!.columns) if (!cells[col.id]) cells[col.id] = newCellEmpty();
@@ -394,10 +390,7 @@ export default function FindCompaniesRoute() {
               {workbook && (
                 <>
                   <span className="text-white/30">/</span>
-                  <Link
-                    to={`/workbooks/${workbook.id}`}
-                    className="hover:text-white/80"
-                  >
+                  <Link to={`/workbooks/${workbook.id}`} className="hover:text-white/80">
                     {workbook.name}
                   </Link>
                 </>
@@ -413,8 +406,7 @@ export default function FindCompaniesRoute() {
           </div>
           <div className="flex items-center gap-3 text-sm text-white/60">
             <span>
-              Showing{" "}
-              <span className="text-white">{limited.length.toLocaleString()}</span> of{" "}
+              Showing <span className="text-white">{limited.length.toLocaleString()}</span> of{" "}
               <span className="text-white">{matched.length.toLocaleString()}</span> matches
             </span>
             <Button onClick={handleContinue} disabled={limited.length === 0}>
@@ -587,7 +579,9 @@ export default function FindCompaniesRoute() {
           <main className="flex flex-col overflow-hidden">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-2 text-sm text-white/60">
               <span>Preview</span>
-              <span>{limited.length.toLocaleString()} of {matched.length.toLocaleString()}</span>
+              <span>
+                {limited.length.toLocaleString()} of {matched.length.toLocaleString()}
+              </span>
             </div>
             <div className="flex-1 overflow-auto">
               <table className="w-full border-collapse text-sm">
@@ -610,15 +604,10 @@ export default function FindCompaniesRoute() {
                     </tr>
                   ) : (
                     limited.map((c, i) => (
-                      <tr
-                        key={c.company_id}
-                        className="border-b border-white/5 hover:bg-white/5"
-                      >
+                      <tr key={c.company_id} className="border-b border-white/5 hover:bg-white/5">
                         <td className="px-3 py-2 font-mono text-mono-xs text-white/40">{i + 1}</td>
                         <td className="px-3 py-2 text-white">{c.company_name}</td>
-                        <td className="px-3 py-2 text-white/70">
-                          {truncate(c.description, 90)}
-                        </td>
+                        <td className="px-3 py-2 text-white/70">{truncate(c.description, 90)}</td>
                         <td className="px-3 py-2 text-white/80">{c.industry ?? "—"}</td>
                         <td className="px-3 py-2 font-mono text-mono-xs text-white/70">
                           {c.employee_band ?? "—"}
@@ -626,7 +615,7 @@ export default function FindCompaniesRoute() {
                         <td className="px-3 py-2 font-mono text-mono-xs text-white/60">
                           {c.hq_locality && c.hq_state
                             ? `${c.hq_locality}, ${c.hq_state}`
-                            : c.hq_state ?? "—"}
+                            : (c.hq_state ?? "—")}
                         </td>
                       </tr>
                     ))
@@ -695,7 +684,7 @@ function rowsFor(map: Record<string, string>, picks: CompanyHit[]): Row[] {
       },
       [map.hq]: {
         value:
-          c.hq_locality && c.hq_state ? `${c.hq_locality}, ${c.hq_state}` : c.hq_state ?? null,
+          c.hq_locality && c.hq_state ? `${c.hq_locality}, ${c.hq_state}` : (c.hq_state ?? null),
         status: c.hq_state ? "success" : "empty",
         enriched_at: now,
       },
@@ -708,4 +697,3 @@ function rowsFor(map: Record<string, string>, picks: CompanyHit[]): Row[] {
     return { id: newRowId(), source_id: c.company_id, cells };
   });
 }
-

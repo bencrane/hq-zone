@@ -1,3 +1,4 @@
+import { Building2, Plus, Users } from "lucide-react";
 /**
  * Workbook detail — `/workbooks/:workbook_id`. Lists the tables in
  * this workbook with quick actions. Entry point for "Find companies"
@@ -5,21 +6,16 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Building2, Plus, Users } from "lucide-react";
 
-import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
+import { type Table, listTablesInWorkbook, subscribe as subscribeTables } from "@/lib/tables";
 import {
+  type Workbook,
   deleteWorkbook,
   getWorkbook,
   renameWorkbook,
   subscribe as subscribeWorkbooks,
-  type Workbook,
 } from "@/lib/workbooks";
-import {
-  listTablesInWorkbook,
-  subscribe as subscribeTables,
-  type Table,
-} from "@/lib/tables";
+import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 
 function fmtDate(iso: string): string {
   try {
@@ -107,10 +103,7 @@ export default function WorkbookDetail() {
             </Button>
           </Link>
           <Inline gap="2" align="center">
-            <Button
-              size="sm"
-              onClick={() => navigate(`/find/companies?workbook=${workbook.id}`)}
-            >
+            <Button size="sm" onClick={() => navigate(`/find/companies?workbook=${workbook.id}`)}>
               <Plus className="h-3.5 w-3.5" /> Find companies
             </Button>
             <Button variant="ghost" size="sm" onClick={handleRename}>
@@ -137,12 +130,10 @@ export default function WorkbookDetail() {
             <Stack gap="3" align="start">
               <Text size="body-md">Empty workbook.</Text>
               <Text size="body-sm" color="muted">
-                Find companies to seed your first table. From there, spawn a People table or stack enrichment columns.
+                Find companies to seed your first table. From there, spawn a People table or stack
+                enrichment columns.
               </Text>
-              <Button
-                size="sm"
-                onClick={() => navigate(`/find/companies?workbook=${workbook.id}`)}
-              >
+              <Button size="sm" onClick={() => navigate(`/find/companies?workbook=${workbook.id}`)}>
                 <Plus className="h-3.5 w-3.5" /> Find companies
               </Button>
             </Stack>
@@ -164,14 +155,13 @@ export default function WorkbookDetail() {
                 {tables.map((t) => {
                   const parent = t.parent_table_id ? parentMap.get(t.parent_table_id) : null;
                   return (
+                    // biome-ignore lint/a11y/useKeyWithClickEvents: pre-existing click-to-navigate row; adding a row-level keyboard handler would change runtime behavior (out of scope for this lint-debt sweep).
                     <tr
                       key={t.id}
                       onClick={() => navigate(`/tables/${t.id}`)}
                       className="cursor-pointer border-b border-[color:var(--color-border-subtle)] last:border-0 hover:bg-[color:var(--color-surface-raised)]"
                     >
-                      <td className="px-3 py-2 text-[color:var(--color-text-strong)]">
-                        {t.name}
-                      </td>
+                      <td className="px-3 py-2 text-[color:var(--color-text-strong)]">{t.name}</td>
                       <td className="px-3 py-2">
                         <span className="inline-flex items-center gap-1.5 text-white/70">
                           {t.kind === "companies" ? (

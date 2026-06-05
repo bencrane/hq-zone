@@ -1,3 +1,4 @@
+import { Loader2, Plus, X } from "lucide-react";
 /**
  * Table view — `/tables/:table_id`. Clay-shape grid: rows × columns,
  * "+ column" header affordance, per-cell status pills. Subscribes to
@@ -5,26 +6,25 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Loader2, Plus, X } from "lucide-react";
 
-import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
+import { SendToCampaignDialog } from "@/campaigns/SendToCampaignDialog";
+import type { EnrollRecipientInput } from "@/campaigns/api";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  type Cell,
+  type Column,
+  type Row,
+  type Table,
   deleteTable,
   getTable,
   removeColumn,
   removeRows,
   subscribe,
-  type Cell,
-  type Column,
-  type Row,
-  type Table,
 } from "@/lib/tables";
 import { getWorkbook } from "@/lib/workbooks";
+import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 import { AddColumnDialog } from "./AddColumnDialog";
 import { FindPeopleDialog } from "./FindPeopleDialog";
-import { SendToCampaignDialog } from "@/campaigns/SendToCampaignDialog";
-import type { EnrollRecipientInput } from "@/campaigns/api";
 
 function renderCell(cell: Cell | undefined, column: Column): React.ReactNode {
   if (!cell || cell.status === "empty") {
@@ -40,10 +40,7 @@ function renderCell(cell: Cell | undefined, column: Column): React.ReactNode {
   }
   if (cell.status === "error") {
     return (
-      <span
-        title={cell.error ?? "error"}
-        className="inline-flex items-center gap-1.5 text-red-400"
-      >
+      <span title={cell.error ?? "error"} className="inline-flex items-center gap-1.5 text-red-400">
         <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
         <span className="text-xs">error</span>
       </span>
@@ -103,13 +100,10 @@ export default function TableView() {
   const enrollRecipients: EnrollRecipientInput[] = useMemo(() => {
     if (!table || table.kind !== "people") return [];
     const tbl = table;
-    const rowsForEnroll =
-      selected.size > 0 ? tbl.rows.filter((r) => selected.has(r.id)) : tbl.rows;
+    const rowsForEnroll = selected.size > 0 ? tbl.rows.filter((r) => selected.has(r.id)) : tbl.rows;
     function colByName(...names: string[]): string | undefined {
       const lower = names.map((n) => n.toLowerCase());
-      const c = tbl.columns.find((col) =>
-        lower.some((n) => col.name.toLowerCase().includes(n)),
-      );
+      const c = tbl.columns.find((col) => lower.some((n) => col.name.toLowerCase().includes(n)));
       return c?.id;
     }
     const fullNameCol = colByName("full name", "name");
@@ -185,20 +179,14 @@ export default function TableView() {
   }
 
   const headerState: boolean | "indeterminate" =
-    selected.size === 0
-      ? false
-      : selected.size === table.rows.length
-      ? true
-      : "indeterminate";
+    selected.size === 0 ? false : selected.size === table.rows.length ? true : "indeterminate";
 
   return (
     <Page variant="wide">
       <Stack gap="6">
         <Inline justify="between" align="center">
           <Inline gap="3" align="center">
-            <Link
-              to={workbook ? `/workbooks/${workbook.id}` : "/workbooks"}
-            >
+            <Link to={workbook ? `/workbooks/${workbook.id}` : "/workbooks"}>
               <Button variant="ghost" size="sm">
                 ← {workbook ? workbook.name : "Workbooks"}
               </Button>
@@ -210,10 +198,7 @@ export default function TableView() {
               {workbook && (
                 <>
                   <span className="text-white/30">/</span>
-                  <Link
-                    to={`/workbooks/${workbook.id}`}
-                    className="hover:text-white/80"
-                  >
+                  <Link to={`/workbooks/${workbook.id}`} className="hover:text-white/80">
                     {workbook.name}
                   </Link>
                 </>
@@ -256,8 +241,8 @@ export default function TableView() {
             </span>
           </Inline>
           <Text size="body-sm" color="muted">
-            {table.rows.length} {table.rows.length === 1 ? "row" : "rows"} ·{" "}
-            {table.columns.length} {table.columns.length === 1 ? "column" : "columns"}
+            {table.rows.length} {table.rows.length === 1 ? "row" : "rows"} · {table.columns.length}{" "}
+            {table.columns.length === 1 ? "column" : "columns"}
           </Text>
         </Stack>
 
@@ -339,11 +324,7 @@ export default function TableView() {
         )}
       </Stack>
 
-      <AddColumnDialog
-        open={addColOpen}
-        onOpenChange={setAddColOpen}
-        table={table}
-      />
+      <AddColumnDialog open={addColOpen} onOpenChange={setAddColOpen} table={table} />
       {table.kind === "companies" && (
         <FindPeopleDialog
           open={findPeopleOpen}
@@ -374,6 +355,7 @@ interface TableRowViewProps {
 function TableRowView({ row, columns, isSelected, onToggle }: TableRowViewProps) {
   return (
     <tr className="border-b border-[color:var(--color-border-subtle)] last:border-0 hover:bg-[color:var(--color-surface-raised)]">
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: onClick only stops propagation so the checkbox cell doesn't trigger row selection; there is no keyboard interaction to handle. */}
       <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
         <Checkbox checked={isSelected} onCheckedChange={onToggle} aria-label="Select row" />
       </td>

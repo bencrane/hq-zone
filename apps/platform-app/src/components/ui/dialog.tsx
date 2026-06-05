@@ -1,10 +1,6 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import {
-  type ComponentPropsWithoutRef,
-  type HTMLAttributes,
-  forwardRef,
-} from "react";
+import { type ComponentPropsWithoutRef, type HTMLAttributes, forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -52,28 +48,14 @@ export const DialogContent = forwardRef<
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-export function DialogHeader({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("flex flex-col space-y-1.5 text-left", className)}
-      {...props}
-    />
-  );
+export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("flex flex-col space-y-1.5 text-left", className)} {...props} />;
 }
 
-export function DialogFooter({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) {
+export function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className,
-      )}
+      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   );
@@ -85,10 +67,7 @@ export const DialogTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn(
-      "text-lg font-medium leading-none tracking-tight text-white",
-      className,
-    )}
+    className={cn("text-lg font-medium leading-none tracking-tight text-white", className)}
     {...props}
   />
 ));

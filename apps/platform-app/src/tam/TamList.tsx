@@ -8,12 +8,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 import { useAuth } from "@/lib/auth";
-import { searchTam, type TamRow, type TamSearchFilters } from "./api";
+import { Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 import { FilterBar } from "./FilterBar";
 import { SaveToListDialog } from "./SaveToListDialog";
 import { TamTable } from "./TamTable";
+import { type TamRow, type TamSearchFilters, searchTam } from "./api";
 import { PAGE_SIZES } from "./constants";
 
 export default function TamList() {
@@ -71,7 +71,8 @@ export default function TamList() {
               TAM
             </Text>
             <Text size="body-sm" color="muted">
-              Lead list builder — filter people by title, seniority, function, and company firmographics.
+              Lead list builder — filter people by title, seniority, function, and company
+              firmographics.
             </Text>
           </Stack>
           <Inline gap="3" align="center">
@@ -104,20 +105,11 @@ export default function TamList() {
                     <Text size="body-sm" color="muted">
                       ·
                     </Text>
-                    <Text size="body-sm">
-                      {selectedCount} selected
-                    </Text>
-                    <Button
-                      size="sm"
-                      onClick={() => setSaveOpen(true)}
-                    >
+                    <Text size="body-sm">{selectedCount} selected</Text>
+                    <Button size="sm" onClick={() => setSaveOpen(true)}>
                       Save to list
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelected(new Set())}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>
                       Clear
                     </Button>
                   </>

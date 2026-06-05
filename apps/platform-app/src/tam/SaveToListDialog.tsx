@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,16 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  addToList,
-  createList,
-  listLists,
-  subscribe,
-  type LeadList,
-} from "@/lib/leadLists";
+import { type LeadList, addToList, createList, listLists, subscribe } from "@/lib/leadLists";
 
 interface SaveToListDialogProps {
   open: boolean;
@@ -71,8 +65,7 @@ export function SaveToListDialog({
     onOpenChange(false);
   }
 
-  const canSave =
-    mode === "new" ? newName.trim().length > 0 : selectedId.length > 0;
+  const canSave = mode === "new" ? newName.trim().length > 0 : selectedId.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
