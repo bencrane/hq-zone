@@ -139,7 +139,9 @@ export default function AgentChatPage() {
   }
 
   const meta = STATUS_META[chat.status];
-  const empty = chat.events.length === 0 && !chat.starting;
+  // Keep the error visible: a failed first send rolls the echo back to empty,
+  // and the starter screen would otherwise swallow the error callout.
+  const empty = chat.events.length === 0 && !chat.starting && !chat.error;
   const working = chat.status === "running" || chat.status === "connecting" || chat.starting;
 
   return (
