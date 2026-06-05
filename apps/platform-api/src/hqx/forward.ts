@@ -1,10 +1,10 @@
 /**
- * The single forwarder behind every platform-api → hq-x route. Two modes:
+ * The single forwarder behind every platform-api → core-x route. Two modes:
  *
  *   - forwardJson:   buffer the upstream body and re-emit with VERBATIM status
- *                    + content-type (hq-x's structured error envelopes pass
+ *                    + content-type (core-x's structured error envelopes pass
  *                    through unchanged). Correct for every REST route.
- *   - forwardStream: hand hq-x's `text/event-stream` ReadableStream straight to
+ *   - forwardStream: hand core-x's `text/event-stream` ReadableStream straight to
  *                    the Response WITHOUT buffering. This is the SSE fix: the
  *                    old per-file `proxy()` did `await res.text()`, which holds
  *                    the whole stream until upstream closes — i.e. never flushes
@@ -13,7 +13,7 @@
  *                    backpressure.
  *
  * Client disconnect: forwardStream forwards `c.req.raw.signal` to the upstream
- * fetch, so closing the browser tab aborts BFF → hq-x → Anthropic.
+ * fetch, so closing the browser tab aborts BFF → core-x → Anthropic.
  */
 import type { Context } from "hono";
 
@@ -31,7 +31,7 @@ export interface ForwardSpec {
 /**
  * Build the outbound body. GET/DELETE carry none. For writes: `body` identity
  * injects user_id; otherwise the client body is forwarded as-is, defaulting an
- * empty body to `{}` so hq-x endpoints that expect a JSON object (views
+ * empty body to `{}` so core-x endpoints that expect a JSON object (views
  * compute / materialize / catalog-refresh) still receive one — matching the
  * prior hand-written behavior.
  */
@@ -66,7 +66,7 @@ export async function forwardStream(c: Ctx, spec: ForwardSpec): Promise<Response
   const upstream = await fetch(spec.url, {
     method: "GET",
     headers: { ...hqxHeaders(c.get("user"), spec.identity, false), Accept: "text/event-stream" },
-    // Propagate client disconnect upstream so hq-x (and Anthropic) tear down.
+    // Propagate client disconnect upstream so core-x (and Anthropic) tear down.
     signal: c.req.raw.signal,
   });
 
@@ -87,7 +87,7 @@ export async function forwardStream(c: Ctx, spec: ForwardSpec): Promise<Response
     headers: {
       "content-type": upstream.headers.get("content-type") ?? "text/event-stream; charset=utf-8",
       "cache-control": "no-cache, no-transform",
-      // Re-assert hq-x's anti-buffering hint at the BFF edge (harmless on
+      // Re-assert core-x's anti-buffering hint at the BFF edge (harmless on
       // Railway, correct if a buffering hop is ever inserted).
       "x-accel-buffering": "no",
     },

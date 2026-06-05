@@ -1,6 +1,6 @@
 /**
  * Campaigns broker — orchestrates "enroll a list into a campaign" against
- * hq-x's atomic BFF endpoint (apps/hq-x/app/routers/bff_campaigns.py).
+ * core-x's atomic BFF endpoint (apps/core-x/app/routers/bff_campaigns.py).
  *
  * One HTTP call: POST {HQX_API_URL}/api/v1/bff/campaigns/enroll-list
  * with the org/brand resolved from Doppler. The endpoint runs a single
@@ -8,7 +8,7 @@
  * recipients + step memberships; partial failures roll back cleanly.
  *
  * Auth: HQX_SERVICE_TOKEN as Authorization. The BFF asserts its own
- * identity to hq-x; no per-user JWT is forwarded (single-operator model).
+ * identity to core-x; no per-user JWT is forwarded (single-operator model).
  *
  * Routes:
  *   POST /enroll-list  → create campaign + enroll recipients atomically
@@ -30,7 +30,7 @@ const RecipientInput = z.object({
   person_state: z.string().nullable().optional(),
   person_locality: z.string().nullable().optional(),
   // Where this lead came from in our world ("tam_fixture", "pdl_lance",
-  // "blitz_search", etc). hq-x stores this as the `external_source`
+  // "blitz_search", etc). core-x stores this as the `external_source`
   // half of the org-natural-key (organization_id, external_source, external_id).
   external_source: z.string().min(1).max(64).default("hq_zone"),
   recipient_type: z.enum(["business", "property", "person", "other"]).default("person"),
@@ -40,7 +40,7 @@ const RecipientInput = z.object({
 const EnrollListBody = z.object({
   campaign_name: z.string().min(1).max(200),
   // Channel/provider whitelist mirrors VALID_CHANNEL_PROVIDER_PAIRS in
-  // apps/hq-x/app/models/campaigns.py. The UI selects already pre-pair
+  // apps/core-x/app/models/campaigns.py. The UI selects already pre-pair
   // these; we re-validate here so a hand-crafted curl can't smuggle a
   // bad combo through.
   channel: z.enum(["email", "direct_mail", "voice_outbound", "sms"]).default("email"),
@@ -48,10 +48,10 @@ const EnrollListBody = z.object({
   step_name: z.string().min(1).max(200).optional(),
   source_label: z.string().max(200).optional(),
   recipients: z.array(RecipientInput).min(1).max(10_000),
-  // Operator-authored content for the first step. hq-x reads this from
+  // Operator-authored content for the first step. core-x reads this from
   // channel_specific_config at send time. For email/manual mode, the
   // expected keys are subject + body_text + body_html (per
-  // ChannelCampaignStepContentMode docs in hq-x/app/models/campaigns.py).
+  // ChannelCampaignStepContentMode docs in core-x/app/models/campaigns.py).
   email_subject: z.string().max(200).optional(),
   email_body_text: z.string().max(50_000).optional(),
   email_body_html: z.string().max(200_000).optional(),
@@ -70,7 +70,7 @@ interface EnrollResult {
 }
 
 async function callBackendEnrollList(p: EnrollListPayload, userId: string): Promise<EnrollResult> {
-  // Channel-specific step content. For email/manual mode hq-x reads
+  // Channel-specific step content. For email/manual mode core-x reads
   // {subject, body_text, body_html} from channel_specific_config at
   // send time and runs a simple {first_name}-style substitution.
   const channelSpecificConfig: Record<string, string> = {};
@@ -122,12 +122,12 @@ async function callBackendEnrollList(p: EnrollListPayload, userId: string): Prom
   const text = await res.text();
   if (!res.ok) {
     // eslint-disable-next-line no-console
-    console.error("[campaigns.enroll-list] backend-x error", {
+    console.error("[campaigns.enroll-list] core-x error", {
       status: res.status,
       body: text.slice(0, 1000),
     });
     throw new HTTPException(res.status as 400 | 401 | 403 | 404 | 500, {
-      message: text || `backend-x returned ${res.status}`,
+      message: text || `core-x returned ${res.status}`,
     });
   }
 
@@ -152,7 +152,7 @@ campaignsRoutes.post("/enroll-list", async (c) => {
 });
 
 // Listing endpoint placeholder — a follow-up cycle exposes a GET that
-// hits hq-x's existing GET /api/v1/campaigns with org scope.
+// hits core-x's existing GET /api/v1/campaigns with org scope.
 campaignsRoutes.get("/", async (c) => {
   return c.json({ data: { campaigns: [] } });
 });

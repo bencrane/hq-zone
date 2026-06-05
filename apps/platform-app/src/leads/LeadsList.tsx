@@ -1,7 +1,7 @@
 import { Loader2 } from "lucide-react";
 /**
  * Leads list — `/leads`. Read-only view over gtm.people through
- * platform-api -> hq-x. Source dropdown + free-text search + offset
+ * platform-api -> core-x. Source dropdown + free-text search + offset
  * pagination.
  *
  * Intentionally minimal: no row selection, no workbook integration,

@@ -6,7 +6,7 @@
  * - /health (unauthenticated) for liveness probes
  * - /api/v1/me (auth-required) echoes the validated user
  * - /api/v1/campaigns/* (auth-required) — BFF enroll-list reshaping
- * - everything else under /api/v1/* — the declarative hq-x gateway
+ * - everything else under /api/v1/* — the declarative core-x gateway
  *   (hqx/table.ts): sam-opps, coverage, gtm/people, signals, views, agent-runs
  */
 
@@ -44,7 +44,7 @@ app.get("/api/v1/me", requireUser, (c) => {
 });
 
 app.route("/api/v1/campaigns", campaignsRoutes);
-// Every other hq-x surface — sam-opps, coverage, gtm/people, signals, views,
+// Every other core-x surface — sam-opps, coverage, gtm/people, signals, views,
 // agent-runs — is served by the declarative gateway. New surface = one row in
 // hqx/table.ts; no new file, no copy-pasted auth/forwarding.
 app.route("/", hqxRouter());

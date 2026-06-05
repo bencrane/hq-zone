@@ -1,7 +1,7 @@
 /**
  * Views BFF client. Talks to platform-api `/api/v1/views`.
  *
- * Storage + materialization + compute all live in DEX (via hq-x). This
+ * Storage + materialization + compute all live in DEX (via core-x). This
  * client is a thin fetch wrapper; the wire shape is the View Zod schema in
  * @rare-structure-hq/shared.
  *

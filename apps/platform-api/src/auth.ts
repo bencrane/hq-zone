@@ -18,7 +18,7 @@ export type CurrentUser = {
   user_id: string;
   email: string;
   /** The raw (un-prefixed) Supabase access token, for routes that forward it
-   *  to hq-x as `X-User-Bearer`. See hqx/identity.ts. */
+   *  to core-x as `X-User-Bearer`. See hqx/identity.ts. */
   jwt: string;
 };
 

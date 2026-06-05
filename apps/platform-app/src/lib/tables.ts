@@ -4,7 +4,7 @@
  * dataset) or enrichment (filled by running a recipe per-row).
  *
  * Currently localStorage-backed for product-experience iteration. The
- * real home is hq-x's gtm-initiatives schema; swap-out is one module.
+ * real home is core-x's gtm-initiatives schema; swap-out is one module.
  *
  * Storage shape:
  *   localStorage["hq:tables"] = JSON.stringify(Table[])

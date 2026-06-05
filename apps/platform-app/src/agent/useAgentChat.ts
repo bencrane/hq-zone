@@ -123,7 +123,7 @@ export function useAgentChat(
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Bumping this re-runs the load/tail effect WITHOUT changing the active
-  // session — used to re-open the SSE stream so hq-x's present_result
+  // session — used to re-open the SSE stream so core-x's present_result
   // reconcile fires and heals a session wedged on an un-acked tool result.
   const [reconnectNonce, setReconnectNonce] = useState(0);
   const seen = useRef<Set<string>>(new Set());
@@ -174,7 +174,7 @@ export function useAgentChat(
   const loadedSessionRef = useRef<string | null>(null);
 
   // Reset (on session change) + load + tail. Re-runs on reconnectNonce to
-  // re-open the SSE stream (heals a wedged session via hq-x reconcile). The
+  // re-open the SSE stream (heals a wedged session via core-x reconcile). The
   // `void reconnectNonce` read makes that re-trigger an honest dependency
   // rather than a lint-suppressed one.
   useEffect(() => {
@@ -263,7 +263,7 @@ export function useAgentChat(
 
         if (err instanceof SendUserEventError && err.isRecoverableBusy) {
           // The session is mid-turn or wedged waiting on a tool-result ack
-          // (e.g. an un-acked present_result). Re-open the stream so hq-x's
+          // (e.g. an un-acked present_result). Re-open the stream so core-x's
           // reconcile acks the open tool call and drains the session back to
           // idle; show a calm, actionable message instead of a raw 502.
           setError(

@@ -1,6 +1,6 @@
 // Pinned SBA 7(a) aggregate data for the insights briefing.
 // Values from capital-expansion R2 aggregates (2026-05-14 validator-pinned anchors).
-// Replaced by live data-engine-x queries when platform-api is wired.
+// Replaced by live core-x queries when platform-api is wired.
 
 export const PIPELINE = {
   quarterLabel: "Q1 2026",

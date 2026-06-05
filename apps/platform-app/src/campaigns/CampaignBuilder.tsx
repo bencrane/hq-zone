@@ -6,7 +6,7 @@
  * Submits via the same platform-api `/api/v1/campaigns/enroll-list`
  * endpoint as the in-table "Send to campaign" action — the BFF forwards
  * subject + body content as channel_specific_config on the first step.
- * hq-x stores it on business.channel_campaign_steps.channel_specific_config
+ * core-x stores it on business.channel_campaign_steps.channel_specific_config
  * and substitutes {first_name} (etc.) at send time.
  *
  * Sections:
@@ -16,7 +16,7 @@
  *      a placeholder until their content shape lands.
  *
  * One step today (matches the BFF endpoint). Multi-step authoring is
- * a follow-up that extends hq-x's atomic enroll-list to accept N steps.
+ * a follow-up that extends core-x's atomic enroll-list to accept N steps.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -144,7 +144,7 @@ export default function CampaignBuilder() {
           <Box border="subtle" p="6" rounded="xl">
             <Stack gap="3">
               <Text size="body-sm" color="muted">
-                hq-x ids
+                core-x ids
               </Text>
               <Stack gap="1">
                 <Text size="mono-sm">campaign_id: {result.campaign_id}</Text>
@@ -153,7 +153,7 @@ export default function CampaignBuilder() {
               </Stack>
               <Text size="body-sm" color="muted">
                 The step is in <span className="text-white">pending</span> status — it won't fire
-                until the step is activated in hq-x.
+                until the step is activated in core-x.
               </Text>
             </Stack>
           </Box>
@@ -233,8 +233,8 @@ export default function CampaignBuilder() {
             Build a campaign
           </Text>
           <Text size="body-sm" color="muted">
-            Pick a list, author the first message, and enroll. Lands in hq-x as a campaign + channel
-            campaign + step in <span className="text-white">pending</span> status.
+            Pick a list, author the first message, and enroll. Lands in core-x as a campaign +
+            channel campaign + step in <span className="text-white">pending</span> status.
           </Text>
         </Stack>
 
@@ -376,7 +376,7 @@ export default function CampaignBuilder() {
                 <Text size="body-sm" color="muted">
                   Plain text for v1. Tokens like{" "}
                   <span className="font-mono text-white">{"{first_name}"}</span> are substituted at
-                  send time by hq-x.
+                  send time by core-x.
                 </Text>
               </div>
             </>
@@ -384,8 +384,9 @@ export default function CampaignBuilder() {
             <Box border="subtle" p="4" rounded="xl">
               <Text size="body-sm" color="muted">
                 Content authoring for <span className="text-white">{channel}</span> is not wired yet
-                — the step lands in hq-x with empty config and is ready for the operator to fill in
-                later. For an end-to-end send today, pick <span className="text-white">Email</span>.
+                — the step lands in core-x with empty config and is ready for the operator to fill
+                in later. For an end-to-end send today, pick{" "}
+                <span className="text-white">Email</span>.
               </Text>
             </Box>
           )}

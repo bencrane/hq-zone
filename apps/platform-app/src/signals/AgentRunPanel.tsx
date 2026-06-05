@@ -8,7 +8,7 @@
  * The drawer mints the agent run on mount via createAgentRunFromSignal
  * (when opened from a signal row), opens the SSE stream, and tails events
  * into local state. AbortController is bound to the stream so a close
- * propagates all the way back to hq-x → Anthropic.
+ * propagates all the way back to core-x → Anthropic.
  *
  * Reconnect (the docs-prescribed "history list before tailing live"
  * pattern) is intentionally NOT implemented in v1: a panel close fully

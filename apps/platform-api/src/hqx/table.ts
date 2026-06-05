@@ -1,8 +1,8 @@
 /**
- * The declarative allowlist of platform-api → hq-x routes. This is the entire
+ * The declarative allowlist of platform-api → core-x routes. This is the entire
  * config surface that used to be six hand-written files: each entry is a BFF
- * path, the hq-x URL it forwards to, a response mode (json | stream), and how
- * the operator identity is injected (header | body | none). Adding an hq-x
+ * path, the core-x URL it forwards to, a response mode (json | stream), and how
+ * the operator identity is injected (header | body | none). Adding an core-x
  * surface is ONE row here — no new file, no copy-pasted auth/forwarding.
  *
  * Static-segment paths are ordered before their `:param` siblings so the
@@ -19,7 +19,7 @@ export interface HqxRoute {
   /** BFF path in Hono syntax. The router mounts the table at "/", so these are
    *  full paths. */
   path: string;
-  /** Build the upstream hq-x URL from the request context. */
+  /** Build the upstream core-x URL from the request context. */
   url: (c: Context) => string;
   mode: "json" | "stream";
   identity: IdentityMode;
@@ -187,7 +187,7 @@ export const HQX_ROUTES: HqxRoute[] = [
     url: (c) => withQuery(c, `${B}/api/v1/gtm/people`),
   },
 
-  // ── views: BFF /api/v1/views/* → hq-x /api/v1/gtm/views/* ─────────────────
+  // ── views: BFF /api/v1/views/* → core-x /api/v1/gtm/views/* ─────────────────
   {
     method: "GET",
     path: "/api/v1/views/catalog/sources",
@@ -254,7 +254,7 @@ export const HQX_ROUTES: HqxRoute[] = [
 
   // ── scheduled-tasks: the Trigger.dev cron control plane (operator) ─────────
   // GET lists the registry + computed status; PATCH toggles enable/disable +
-  // retags. PATCH uses body-injection so hq-x records the operator (disabled_by).
+  // retags. PATCH uses body-injection so core-x records the operator (disabled_by).
   {
     method: "GET",
     path: "/api/v1/admin/scheduled-tasks",

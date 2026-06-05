@@ -2,7 +2,7 @@
  * Runtime settings for platform-api. Values come from Doppler project
  * `hq-zone` config `prd` (see ../doppler.yaml).
  *
- * Architecture: hq-zone-api -> backend-engine -> data-engine-x.
+ * Architecture: hq-zone-api -> core-x.
  * The BFF never talks to DEX directly and never touches Supabase
  * other than offline JWT verification.
  *
@@ -16,13 +16,13 @@ const envSchema = z.object({
   // Incoming-JWT validation (user JWTs from platform-app)
   SUPABASE_JWKS_URL: z.string().url(),
   SUPABASE_ISSUER: z.string().url(),
-  // Outbound to backend-engine — primary upstream for sam-opps,
+  // Outbound to core-x — primary upstream for sam-opps,
   // gtm-people, campaigns. Service token is the BFF identity;
   // the user's JWT propagates as X-User-Bearer.
   HQX_API_URL: z.string().url(),
   HQX_SERVICE_TOKEN: z.string().min(1),
-  // Org + brand under which hq-zone-originated campaigns land in hq-x.
-  // Both rows already exist in hq-x (business.organizations + business.brands)
+  // Org + brand under which hq-zone-originated campaigns land in core-x.
+  // Both rows already exist in core-x (business.organizations + business.brands)
   // and are referenced by every BFF enroll-list call.
   HQX_DEFAULT_ORG_ID: z.string().uuid(),
   HQX_DEFAULT_BRAND_ID: z.string().uuid(),

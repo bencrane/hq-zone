@@ -1,10 +1,10 @@
 /**
  * Scheduled Tasks BFF client. Talks to platform-api /api/v1/admin/scheduled-tasks,
- * which forwards to hq-x — the Trigger.dev cron control plane (ops.scheduled_tasks
+ * which forwards to core-x — the Trigger.dev cron control plane (ops.scheduled_tasks
  * registry + status engine). Thin Supabase-bearer fetch wrapper, matching views/api.ts.
  *
  * PATCH carries no user_id; the BFF injects it (identity="body") from the validated
- * JWT so hq-x records disabled_by. The browser never sets it.
+ * JWT so core-x records disabled_by. The browser never sets it.
  */
 import { supabase } from "@/lib/supabase";
 

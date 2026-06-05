@@ -1,9 +1,9 @@
 /**
- * Campaigns BFF client. POSTs to platform-api which calls hq-x's atomic
- * BFF enroll endpoint (apps/hq-x/app/routers/bff_campaigns.py).
+ * Campaigns BFF client. POSTs to platform-api which calls core-x's atomic
+ * BFF enroll endpoint (apps/core-x/app/routers/bff_campaigns.py).
  *
  * Org + brand are resolved in the BFF from Doppler — the UI passes the
- * campaign config + lead list and gets back the created hq-x ids.
+ * campaign config + lead list and gets back the created core-x ids.
  */
 import { supabase } from "@/lib/supabase";
 

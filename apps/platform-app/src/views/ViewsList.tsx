@@ -4,7 +4,7 @@
  * row count + URI (Polaris-registered Lance dataset). Click into a view for
  * detail (criteria spec + compute + materialize triggers).
  *
- * Storage is in DEX (gtm.views), accessed via hq-x via the BFF passthrough.
+ * Storage is in DEX (gtm.views), accessed via core-x via the BFF passthrough.
  */
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
