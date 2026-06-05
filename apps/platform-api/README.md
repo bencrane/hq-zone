@@ -12,7 +12,7 @@ Hono BFF for the hq-zone signed-in app.
   - `POST /api/v1/sam-opps/search` → filtered/paginated list
   - `POST /api/v1/sam-opps/stats` → aggregation by dimension
 
-  Outbound carries `Authorization: Bearer <HQ_X_SERVICE_TOKEN>` as the BFF
+  Outbound carries `Authorization: Bearer <HQX_SERVICE_TOKEN>` as the BFF
   identity and `X-User-Bearer: <user JWT>` so core-x can scope the
   request to the user. core-x response is passed through verbatim.
 
@@ -36,8 +36,8 @@ Injected by Doppler at runtime. All keys live in the `hq-zone` Doppler project.
 |-----|-------------|
 | `SUPABASE_JWKS_URL` | JWKS endpoint for incoming user-JWT verification |
 | `SUPABASE_ISSUER` | Expected `iss` claim on incoming user JWTs |
-| `HQ_X_API_URL` | core-x API base URL (sole upstream) |
-| `HQ_X_SERVICE_TOKEN` | Bearer token for BFF-to-core-x calls |
+| `HQX_API_URL` | core-x API base URL (sole upstream) |
+| `HQX_SERVICE_TOKEN` | Bearer token for BFF-to-core-x calls |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins |
 | `APP_ENV` | `prd` \| `stg` \| `dev` |
 
