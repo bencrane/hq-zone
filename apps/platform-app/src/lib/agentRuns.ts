@@ -405,6 +405,92 @@ export type UserDomainEvent =
     }
   | { type: "user.custom_tool_result"; custom_tool_use_id: string; content: ContentBlock[] };
 
+/**
+ * Error raised by sendUserEvent. Carries the upstream Anthropic status/body
+ * that platform-api → hq-x forward in the 502 detail, so callers can tell a
+ * *recoverable* "session busy / waiting on a tool ack" 400 (which clears on
+ * stream reconnect or a user.interrupt) apart from a terminal one (the
+ * Anthropic session is terminated/expired). Without this distinction the chat
+ * either shows a raw 502 or silently drops the operator's message.
+ */
+export class SendUserEventError extends Error {
+  /** HTTP status of the BFF response (typically 502 when Anthropic rejects). */
+  readonly httpStatus: number;
+  /** Anthropic's own status, forwarded by hq-x (e.g. 400). Null if absent. */
+  readonly upstreamStatus: number | null;
+  /** Truncated upstream Anthropic error body, forwarded by hq-x. */
+  readonly upstreamBody: string | null;
+
+  constructor(args: {
+    message: string;
+    httpStatus: number;
+    upstreamStatus: number | null;
+    upstreamBody: string | null;
+  }) {
+    super(args.message);
+    this.name = "SendUserEventError";
+    this.httpStatus = args.httpStatus;
+    this.upstreamStatus = args.upstreamStatus;
+    this.upstreamBody = args.upstreamBody;
+  }
+
+  /**
+   * True when the failure is a transient "session is mid-turn or waiting on a
+   * tool-result ack" rejection — recoverable by reconnecting the stream (which
+   * triggers hq-x's present_result reconcile) or by sending user.interrupt.
+   * Anthropic returns 400 with a body that whitelists user.tool_confirmation /
+   * user.custom_tool_result / user.tool_result / user.interrupt as the only
+   * events it will accept until the open tool call resolves.
+   */
+  get isRecoverableBusy(): boolean {
+    if (this.upstreamStatus !== 400) return false;
+    const body = (this.upstreamBody ?? this.message).toLowerCase();
+    return (
+      body.includes("waiting on responses to events") ||
+      body.includes("user.tool_confirmation") ||
+      body.includes("user.custom_tool_result")
+    );
+  }
+
+  /**
+   * True when the session can no longer accept ANY event (terminated/expired).
+   * The only recovery is a fresh chat — even user.interrupt will be rejected.
+   */
+  get isTerminal(): boolean {
+    const body = (this.upstreamBody ?? this.message).toLowerCase();
+    return (
+      body.includes("terminated") ||
+      body.includes("expired") ||
+      body.includes("not found") ||
+      this.httpStatus === 404
+    );
+  }
+}
+
+/** Parse the BFF 502 detail (or any error body) for the forwarded upstream fields. */
+function parseUpstreamDetail(raw: string): {
+  message: string;
+  upstreamStatus: number | null;
+  upstreamBody: string | null;
+} {
+  try {
+    const parsed = JSON.parse(raw) as {
+      detail?: { message?: string; upstream_status?: number; upstream_body?: string };
+    };
+    const d = parsed.detail;
+    if (d) {
+      return {
+        message: d.message ?? raw,
+        upstreamStatus: typeof d.upstream_status === "number" ? d.upstream_status : null,
+        upstreamBody: d.upstream_body ?? null,
+      };
+    }
+  } catch {
+    // not JSON — fall through to raw
+  }
+  return { message: raw, upstreamStatus: null, upstreamBody: null };
+}
+
 export async function sendUserEvent(sessionId: string, event: UserDomainEvent): Promise<void> {
   const url = `${API_BASE}/api/v1/agent-runs/${encodeURIComponent(sessionId)}/events`;
   const res = await fetch(url, {
@@ -416,7 +502,14 @@ export async function sendUserEvent(sessionId: string, event: UserDomainEvent): 
     body: JSON.stringify({ events: [event] }),
   });
   if (!res.ok) {
-    throw new Error(`sendUserEvent failed: HTTP ${res.status} ${await res.text()}`);
+    const raw = await res.text();
+    const { message, upstreamStatus, upstreamBody } = parseUpstreamDetail(raw);
+    throw new SendUserEventError({
+      message: `sendUserEvent failed: HTTP ${res.status} ${message}`,
+      httpStatus: res.status,
+      upstreamStatus,
+      upstreamBody,
+    });
   }
 }
 

@@ -25,9 +25,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   type AgentRunEvent,
   type CreateAgentRunResponse,
+  SendUserEventError,
   type TextBlock,
   type UserMessageEvent,
   createAgentRun,
+  interruptAgentRun,
   listAgentRunEvents,
   sendUserEvent,
   streamAgentRun,
@@ -40,8 +42,22 @@ export interface UseAgentChat {
   status: ChatStatus;
   /** True while a brand-new session is minting. */
   starting: boolean;
+  /**
+   * True while the agent is actively working a turn (or a turn is open and
+   * blocking new input). Drives the "kill" control in the composer — a turn
+   * that hangs here is the lockout the operator needs to be able to cut.
+   */
+  busy: boolean;
   error: string | null;
   send: (text: string) => void;
+  /**
+   * Cut the current turn via user.interrupt. Recovers a session that is stuck
+   * mid-turn or wedged waiting on a tool ack. Degrades gracefully: if the
+   * session is already terminal (terminated/expired) the interrupt itself is
+   * rejected, and we surface a clear "start a new chat" message instead of a
+   * raw 502. No-op when there is no active session.
+   */
+  interrupt: () => void;
 }
 
 /** Prefix marking a client-minted (optimistic, not-yet-confirmed) event id. */
@@ -106,6 +122,10 @@ export function useAgentChat(
   const [events, setEvents] = useState<AgentRunEvent[]>([]);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bumping this re-runs the load/tail effect WITHOUT changing the active
+  // session — used to re-open the SSE stream so hq-x's present_result
+  // reconcile fires and heals a session wedged on an un-acked tool result.
+  const [reconnectNonce, setReconnectNonce] = useState(0);
   const seen = useRef<Set<string>>(new Set());
   // Keep onCreated current without making send() unstable.
   const onCreatedRef = useRef(onCreated);
@@ -148,14 +168,27 @@ export function useAgentChat(
     });
   }, []);
 
-  // Reset + load whenever the active session changes (including → null).
+  // Tracks which session `events`/`seen` currently reflect, so a stream
+  // *reconnect* (reconnectNonce bump) re-tails without wiping the conversation,
+  // while a true session switch still resets cleanly.
+  const loadedSessionRef = useRef<string | null>(null);
+
+  // Reset (on session change) + load + tail. Re-runs on reconnectNonce to
+  // re-open the SSE stream (heals a wedged session via hq-x reconcile). The
+  // `void reconnectNonce` read makes that re-trigger an honest dependency
+  // rather than a lint-suppressed one.
   useEffect(() => {
-    seen.current = new Set();
-    setError(null);
-    // Preserve the optimistic first message across the mint→activate reset.
-    const seed = pendingFirstRef.current;
-    pendingFirstRef.current = null;
-    setEvents(seed ? [seed] : []);
+    void reconnectNonce;
+    const isSessionSwitch = loadedSessionRef.current !== sessionId;
+    if (isSessionSwitch) {
+      loadedSessionRef.current = sessionId;
+      seen.current = new Set();
+      setError(null);
+      // Preserve the optimistic first message across the mint→activate reset.
+      const seed = pendingFirstRef.current;
+      pendingFirstRef.current = null;
+      setEvents(seed ? [seed] : []);
+    }
     if (!sessionId) return;
 
     const abort = new AbortController();
@@ -186,7 +219,7 @@ export function useAgentChat(
       cancelled = true;
       abort.abort();
     };
-  }, [sessionId, ingest]);
+  }, [sessionId, ingest, reconnectNonce]);
 
   const send = useCallback(
     (text: string) => {
@@ -225,12 +258,49 @@ export function useAgentChat(
         type: "user.message",
         content: [{ type: "text", text: t }],
       }).catch((err) => {
+        // Always roll the optimistic echo back — the message did not land.
         setEvents((prev) => prev.filter((e) => e.id !== optimistic.id));
+
+        if (err instanceof SendUserEventError && err.isRecoverableBusy) {
+          // The session is mid-turn or wedged waiting on a tool-result ack
+          // (e.g. an un-acked present_result). Re-open the stream so hq-x's
+          // reconcile acks the open tool call and drains the session back to
+          // idle; show a calm, actionable message instead of a raw 502.
+          setError(
+            "The agent is still finishing its previous step. Reconnecting — " +
+              "send your message again in a moment, or press Stop to cut the turn.",
+          );
+          setReconnectNonce((n) => n + 1);
+          return;
+        }
+        if (err instanceof SendUserEventError && err.isTerminal) {
+          setError("This chat has ended. Start a new chat to continue.");
+          return;
+        }
         setError(err instanceof Error ? err.message : String(err));
       });
     },
     [sessionId, mintOptimistic],
   );
+
+  const interrupt = useCallback(() => {
+    if (!sessionId) return;
+    setError(null);
+    interruptAgentRun(sessionId)
+      .then(() => {
+        // The interrupt landed; re-open the stream so the resulting
+        // status_idle / end_turn frames (and any reconcile) flow in promptly.
+        setReconnectNonce((n) => n + 1);
+      })
+      .catch((err) => {
+        if (err instanceof SendUserEventError && err.isTerminal) {
+          setError("This chat has already ended. Start a new chat to continue.");
+          return;
+        }
+        // A non-terminal interrupt failure is unexpected — surface it plainly.
+        setError(err instanceof Error ? err.message : String(err));
+      });
+  }, [sessionId]);
 
   const status = useMemo<ChatStatus>(() => {
     if (error) return "error";
@@ -244,5 +314,27 @@ export function useAgentChat(
     return sessionId ? "connecting" : "idle";
   }, [events, error, starting, sessionId]);
 
-  return { events, status, starting, error, send };
+  // `busy` drives the kill control. It is true when a turn is open and could
+  // hang: while minting, while the latest session-status frame is running, OR
+  // while the session sits in requires_action (a wedged-on-tool-ack state that
+  // reports idle at the top level but rejects new user.message — exactly the
+  // lockout the operator must be able to cut). Terminal/idle-clean ⇒ not busy.
+  const busy = useMemo<boolean>(() => {
+    if (starting) return true;
+    for (let i = events.length - 1; i >= 0; i--) {
+      const ev = events[i];
+      const t = ev.type;
+      if (t === "session.status_running" || t === "session.status_rescheduled") return true;
+      if (t === "session.status_terminated") return false;
+      if (t === "session.status_idle") {
+        const sr = (ev as { stop_reason?: { type?: string } | null }).stop_reason;
+        // A present_result/tool-confirmation requires_action leaves the turn
+        // open even though status reads idle — treat as busy so Stop shows.
+        return sr?.type === "requires_action";
+      }
+    }
+    return false;
+  }, [events, starting]);
+
+  return { events, status, starting, busy, error, send, interrupt };
 }
