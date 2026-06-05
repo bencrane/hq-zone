@@ -28,7 +28,7 @@ import {
   Text,
   TextArea,
 } from "@radix-ui/themes";
-import { Send, Sparkles } from "lucide-react";
+import { Send, Sparkles, Square } from "lucide-react";
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -320,7 +320,21 @@ export default function AgentChatPage() {
                         resize="none"
                         style={{ minHeight: 132, paddingRight: 56 }}
                       />
-                      <Box style={{ position: "absolute", right: 10, bottom: 10 }}>
+                      <Flex gap="2" style={{ position: "absolute", right: 10, bottom: 10 }}>
+                        {chat.busy ? (
+                          <IconButton
+                            color="tomato"
+                            variant="solid"
+                            size="3"
+                            radius="large"
+                            onClick={chat.interrupt}
+                            aria-label="Stop the agent"
+                            title="Stop — cut the current turn"
+                            style={{ cursor: "pointer" }}
+                          >
+                            <Square size={16} fill="currentColor" />
+                          </IconButton>
+                        ) : null}
                         <IconButton
                           color="grass"
                           size="3"
@@ -332,7 +346,7 @@ export default function AgentChatPage() {
                         >
                           <Send size={18} />
                         </IconButton>
-                      </Box>
+                      </Flex>
                     </Box>
                     <Text as="div" size="1" color="gray" mt="2">
                       Enter to send · Shift + Enter for a new line
