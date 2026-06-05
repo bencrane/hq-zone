@@ -1,8 +1,8 @@
 /**
- * The hq-x gateway: one Hono app that registers every HQX_ROUTES entry behind
+ * The core-x gateway: one Hono app that registers every HQX_ROUTES entry behind
  * `requireUser`, dispatching to the JSON or streaming forwarder by mode. This
  * is what `index.ts` mounts at "/" in place of the six per-domain `app.route`
- * calls. Adding an hq-x surface is a row in table.ts, never a new file here.
+ * calls. Adding an core-x surface is a row in table.ts, never a new file here.
  */
 import { Hono } from "hono";
 

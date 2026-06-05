@@ -1,16 +1,16 @@
 /**
  * DMaaS client for the Campaign Configurator & Demo (`/campaigns/demo`).
  *
- * Talks DIRECTLY to hq-x's `/api/v1/dmaas/*` router — not through the
+ * Talks DIRECTLY to core-x's `/api/v1/dmaas/*` router — not through the
  * platform-api BFF. Rationale: every dmaas route authenticates with
  * `verify_supabase_jwt`, i.e. the operator's OWN Supabase JWT in the
  * `Authorization` header — exactly the token the browser already holds. The
  * BFF exists to swap in the static service token for routes that need it
  * (sam-opps, coverage, signals → `verify_backend_x_token`); dmaas needs no
- * such secret, so the BFF would add a hop with zero value. hq-x already
+ * such secret, so the BFF would add a hop with zero value. core-x already
  * allow-lists the platform-app origin for CORS ("the direct browser client").
  *
- * Base URL: VITE_HQX_API_URL (e.g. http://localhost:8000 in dev, the hq-x
+ * Base URL: VITE_HQX_API_URL (e.g. http://localhost:8000 in dev, the core-x
  * Railway URL in prod). Falls back to same-origin so a missing var fails loud
  * at the network layer rather than silently hitting the BFF.
  *
@@ -25,7 +25,7 @@ const HQX_BASE = (import.meta.env.VITE_HQX_API_URL as string | undefined) ?? "";
 
 if (!HQX_BASE) {
   // eslint-disable-next-line no-console
-  console.warn("campaign-demo: VITE_HQX_API_URL missing — calling hq-x same-origin.");
+  console.warn("campaign-demo: VITE_HQX_API_URL missing — calling core-x same-origin.");
 }
 
 async function bearer(): Promise<string> {
@@ -145,7 +145,7 @@ export interface ScaffoldListParams {
 
 // ─────────────────────────── Error handling ────────────────────────────────
 
-/** A structured dmaas failure. `code` is hq-x's `detail.error` discriminator
+/** A structured dmaas failure. `code` is core-x's `detail.error` discriminator
  *  ("scaffold_does_not_solve", "content_schema_violation", …); `conflicts` and
  *  `schemaErrors` are populated when the body carries them. */
 export class DmaasError extends Error {

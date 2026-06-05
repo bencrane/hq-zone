@@ -1,7 +1,7 @@
 /**
  * Lead list detail — `/lists/:list_id`. Shows members of one list,
  * supports remove-from-list, delete-list, and "Send to campaign"
- * which enrolls the list into a new hq-x campaign via the platform-api
+ * which enrolls the list into a new core-x campaign via the platform-api
  * orchestrator.
  */
 import { useEffect, useMemo, useState } from "react";

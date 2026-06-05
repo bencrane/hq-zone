@@ -99,7 +99,7 @@ export function SendToCampaignDialog({
           <DialogTitle>Send to campaign</DialogTitle>
           <DialogDescription>
             Enrolls {recipients.length} {recipients.length === 1 ? "person" : "people"} from{" "}
-            <span className="text-white">{sourceLabel}</span> into a new campaign in hq-x.
+            <span className="text-white">{sourceLabel}</span> into a new campaign in core-x.
           </DialogDescription>
         </DialogHeader>
 

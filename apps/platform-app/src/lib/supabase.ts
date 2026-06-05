@@ -2,7 +2,7 @@
  * Supabase client + session helpers.
  *
  * The platform-app authenticates against the rare-structure-hq Supabase
- * project (today that's the hq-x project — the prototype-to-product
+ * project (today that's the core-x project — the prototype-to-product
  * reuse path). The BFF validates the access_token via JWKS and DEX
  * trusts the same JWT downstream, so a single session covers the whole
  * call chain.

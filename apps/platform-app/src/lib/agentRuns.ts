@@ -1,12 +1,12 @@
 /**
- * Client for /api/v1/agent-runs (platform-api → hq-x).
+ * Client for /api/v1/agent-runs (platform-api → core-x).
  *
  * Provides typed REST methods and an async-generator SSE consumer for
  * the Anthropic Managed Agents event stream. Auth uses the same
  * Supabase bearer pattern as the rest of lib/api.ts.
  *
  * Auto-ack of `present_result` custom tool calls happens upstream in
- * hq-x's stream_events_with_autoack. The frontend does NOT send
+ * core-x's stream_events_with_autoack. The frontend does NOT send
  * user.custom_tool_result for present_result event_ids — it only
  * renders the typed result card. Other tool/permission gates (generic
  * agent.tool_use with permission_policy) still surface as requires_action
@@ -154,7 +154,7 @@ export type AgentRunEvent =
 
 // ───────────────────────────────────────────────────────────────────────────
 // `present_result` payload schemas — must match
-// apps/hq-x/scripts/managed_agents/result_types.py exactly
+// apps/core-x/scripts/managed_agents/result_types.py exactly
 // ───────────────────────────────────────────────────────────────────────────
 
 export type ResultType =
@@ -283,7 +283,7 @@ export async function createAgentRunFromSignal(
 }
 
 export interface CreateAgentRunArgs {
-  /** First user.message — hq-x mints the session and seeds it with this. */
+  /** First user.message — core-x mints the session and seeds it with this. */
   initial_message: string;
   /** Optional human label for the run (admin "recent runs" view). */
   title?: string;
@@ -294,7 +294,7 @@ export interface CreateAgentRunArgs {
 /**
  * Mint a free-form chat session against the gtm-agent. Hits the BFF, which
  * injects the operator's `user_id` from the validated JWT (the browser never
- * sends it) and forwards to hq-x `POST /api/v1/agent-runs`.
+ * sends it) and forwards to core-x `POST /api/v1/agent-runs`.
  */
 export async function createAgentRun(args: CreateAgentRunArgs): Promise<CreateAgentRunResponse> {
   const res = await fetch(`${API_BASE}/api/v1/agent-runs`, {
@@ -407,7 +407,7 @@ export type UserDomainEvent =
 
 /**
  * Error raised by sendUserEvent. Carries the upstream Anthropic status/body
- * that platform-api → hq-x forward in the 502 detail, so callers can tell a
+ * that platform-api → core-x forward in the 502 detail, so callers can tell a
  * *recoverable* "session busy / waiting on a tool ack" 400 (which clears on
  * stream reconnect or a user.interrupt) apart from a terminal one (the
  * Anthropic session is terminated/expired). Without this distinction the chat
@@ -416,9 +416,9 @@ export type UserDomainEvent =
 export class SendUserEventError extends Error {
   /** HTTP status of the BFF response (typically 502 when Anthropic rejects). */
   readonly httpStatus: number;
-  /** Anthropic's own status, forwarded by hq-x (e.g. 400). Null if absent. */
+  /** Anthropic's own status, forwarded by core-x (e.g. 400). Null if absent. */
   readonly upstreamStatus: number | null;
-  /** Truncated upstream Anthropic error body, forwarded by hq-x. */
+  /** Truncated upstream Anthropic error body, forwarded by core-x. */
   readonly upstreamBody: string | null;
 
   constructor(args: {
@@ -437,7 +437,7 @@ export class SendUserEventError extends Error {
   /**
    * True when the failure is a transient "session is mid-turn or waiting on a
    * tool-result ack" rejection — recoverable by reconnecting the stream (which
-   * triggers hq-x's present_result reconcile) or by sending user.interrupt.
+   * triggers core-x's present_result reconcile) or by sending user.interrupt.
    * Anthropic returns 400 with a body that whitelists user.tool_confirmation /
    * user.custom_tool_result / user.tool_result / user.interrupt as the only
    * events it will accept until the open tool call resolves.
@@ -538,7 +538,7 @@ export async function interruptAgentRun(sessionId: string): Promise<void> {
  *   }
  *
  * The AbortSignal is forwarded to the underlying fetch — disconnect
- * propagates all the way back to hq-x and Anthropic.
+ * propagates all the way back to core-x and Anthropic.
  */
 export async function* streamAgentRun(
   sessionId: string,

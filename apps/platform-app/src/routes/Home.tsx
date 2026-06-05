@@ -48,7 +48,7 @@ const TOOLS: Tool[] = [
   },
   {
     title: "Lists",
-    description: "Saved lead lists. Manage members and hand off to hq-x campaigns.",
+    description: "Saved lead lists. Manage members and hand off to core-x campaigns.",
     icon: ListChecks,
     to: "/lists",
   },
@@ -69,7 +69,7 @@ const TOOLS: Tool[] = [
   {
     title: "Campaigns",
     description:
-      "Build an outbound campaign end-to-end: pick a list, author the message, and enroll into hq-x.",
+      "Build an outbound campaign end-to-end: pick a list, author the message, and enroll into core-x.",
     icon: Send,
     to: "/campaigns/new",
   },
@@ -104,7 +104,7 @@ const TOOLS: Tool[] = [
   {
     title: "Scheduled Tasks",
     description:
-      "The Trigger.dev cron control plane — is every scheduled ingest firing? Per-task green/red/grey status, the Modal app or hq-x endpoint each drives, and one-click enable/disable.",
+      "The Trigger.dev cron control plane — is every scheduled ingest firing? Per-task green/red/grey status, the Modal app or core-x endpoint each drives, and one-click enable/disable.",
     icon: Clock,
     to: "/scheduled-tasks",
   },

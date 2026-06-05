@@ -20,15 +20,14 @@
  *                      "views.<slug>_lance"}].
  *
  * The source catalog is NOT hardcoded in this file — it's fetched from the
- * BFF `/api/v1/views/catalog/sources` endpoint, which proxies to hq-x →
+ * BFF `/api/v1/views/catalog/sources` endpoint, which proxies to core-x →
  * DEX's Polaris-driven catalog (139+ Lance datasets across 28 namespaces +
  * virtual overlays).
  *
  * Same schema is consumed by:
  *   - the platform-app form / future managed-agent chat surface
  *   - the platform-api BFF (passthrough)
- *   - hq-x (passthrough)
- *   - data-engine-x (storage + compute + materialize)
+ *   - core-x (passthrough + storage + compute + materialize)
  */
 
 import { z } from "zod";

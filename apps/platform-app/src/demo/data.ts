@@ -3,7 +3,7 @@
  *
  * Everything the cockpit plots and renders comes from here. It is deliberately
  * hardcoded dummy data: the experience, rhythm, and design get nailed before
- * the platform-api BFF (fronting data-engine-x's Lance layer) is wired in.
+ * the platform-api BFF (fronting core-x's Lance layer) is wired in.
  * When real data arrives, this one module is the swap point — nothing else in
  * `src/demo/**` reads data directly.
  *

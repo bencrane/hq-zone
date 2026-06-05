@@ -1,6 +1,6 @@
 /**
  * Thin BFF client for /api/v1/gtm/people/*. Read-only access to the
- * gtm.people table, scoped via platform-api -> hq-x.
+ * gtm.people table, scoped via platform-api -> core-x.
  */
 import { supabase } from "@/lib/supabase";
 

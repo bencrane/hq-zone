@@ -1,7 +1,7 @@
 /**
  * Opportunities table — list view. Each row is a button to the
  * detail route. Posted-date order is enforced server-side
- * (data-engine-x `search_opps` returns posted_date DESC).
+ * (core-x `search_opps` returns posted_date DESC).
  */
 import { useNavigate } from "react-router-dom";
 

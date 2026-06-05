@@ -1,7 +1,7 @@
 /**
  * Lead lists — local state layer (localStorage-backed). Each list is
  * a named bag of person_ids. Prototype storage until lists move to
- * hq-x's gtm-initiatives schema.
+ * core-x's gtm-initiatives schema.
  *
  * Storage shape:
  *   localStorage["hq:leadLists"] = JSON.stringify(LeadList[])

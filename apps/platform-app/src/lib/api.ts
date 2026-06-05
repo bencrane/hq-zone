@@ -159,7 +159,7 @@ export async function getCoverageStats(): Promise<CoverageStats> {
 }
 
 // ────────────── GTM Signals — configuration-driven trigger registry ──────────────
-// Backed by hq-x /api/v1/signals → DEX /api/v1/gtm/signals (reads ops.gtm_signals).
+// Backed by core-x /api/v1/signals → DEX /api/v1/gtm/signals (reads ops.gtm_signals).
 // JSONB criteria is opaque-by-design at the API layer; the UI knows about a few
 // well-known keys (time_window_hours, min_obligated_usd, award_types, action_types)
 // and renders unknown keys as raw JSON.

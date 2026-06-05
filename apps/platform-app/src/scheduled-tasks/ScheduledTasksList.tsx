@@ -1,10 +1,10 @@
 /**
  * Scheduled Tasks — the Trigger.dev cron control plane (operator view).
  *
- * Lists every hq-x scheduled task graded against its expected fire
+ * Lists every core-x scheduled task graded against its expected fire
  * (green/red/grey/amber/disabled), with status/category/priority/SLA filters
  * and a confirm-gated enable/disable toggle. Reads/writes via platform-api →
- * hq-x. Auto-refreshes every 30s. Mirrors the SignalsPage / ViewsList patterns:
+ * core-x. Auto-refreshes every 30s. Mirrors the SignalsPage / ViewsList patterns:
  * useState + useEffect, no react-query, @rare-structure-hq/ui primitives.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -150,7 +150,7 @@ export default function ScheduledTasksList() {
               Scheduled Tasks
             </Text>
             <Text size="body-sm" color="muted">
-              Every Trigger.dev cron in hq-x, graded against its expected fire. green = fired on
+              Every Trigger.dev cron in core-x, graded against its expected fire. green = fired on
               schedule · red = missed or failed · pending = window still open · amber =
               late/running. Auto-refreshes 30s.
             </Text>
@@ -376,8 +376,8 @@ function TaskRow({ task: t, onChanged }: { task: ScheduledTask; onChanged: () =>
             </>
           ) : (
             <>
-              <div className="text-[color:var(--color-text-default)]">hq-x</div>
-              <div>runs in hq-x</div>
+              <div className="text-[color:var(--color-text-default)]">core-x</div>
+              <div>runs in core-x</div>
             </>
           )}
         </td>
@@ -390,7 +390,7 @@ function TaskRow({ task: t, onChanged }: { task: ScheduledTask; onChanged: () =>
                 disabled={busy}
                 onClick={() => {
                   const reason = window.prompt(
-                    `Disable "${t.label}"? Stops its ${t.execution_kind === "modal_dispatch" ? "Modal dispatch" : "hq-x work"} on the next fire. Optional reason:`,
+                    `Disable "${t.label}"? Stops its ${t.execution_kind === "modal_dispatch" ? "Modal dispatch" : "core-x work"} on the next fire. Optional reason:`,
                     "",
                   );
                   if (reason === null) {
