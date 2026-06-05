@@ -150,7 +150,7 @@ export const RECIPES: Recipe[] = [
         "Logistics & Transportation",
         "Energy",
       ];
-      const founded = 1965 + (seed(row.source_id + "y") % 60);
+      const founded = 1965 + (seed(`${row.source_id}y`) % 60);
       return [
         cellOk(employees, "PDL"),
         cellOk(pick(bands, row.source_id, "rev"), "PDL"),
@@ -176,11 +176,7 @@ export const RECIPES: Recipe[] = [
       await sleep(jitterMs(700, 1800));
       // 10% mock-error rate so error states show up in the UX.
       if (seed(row.source_id) % 10 === 0) {
-        return [
-          cellErr("PDL", "no match"),
-          cellErr("PDL", "no match"),
-          cellErr("PDL", "no match"),
-        ];
+        return [cellErr("PDL", "no match"), cellErr("PDL", "no match"), cellErr("PDL", "no match")];
       }
       const slug = row.source_id.toLowerCase().replace(/[^a-z0-9]/g, "");
       return [
@@ -253,7 +249,7 @@ export const RECIPES: Recipe[] = [
     async run(row) {
       await sleep(jitterMs(700, 1900));
       const headline = pick(NEWS_HEADLINES, row.source_id, "n");
-      const daysAgo = seed(row.source_id + "d") % 90;
+      const daysAgo = seed(`${row.source_id}d`) % 90;
       const d = new Date(Date.now() - daysAgo * 86400_000).toISOString().slice(0, 10);
       return [cellOk(headline, "internal"), cellOk(d, "internal")];
     },

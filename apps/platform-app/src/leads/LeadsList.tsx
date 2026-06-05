@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 /**
  * Leads list — `/leads`. Read-only view over gtm.people through
  * platform-api -> hq-x. Source dropdown + free-text search + offset
@@ -9,10 +10,9 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 
 import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
-import { listLeads, type LeadRow } from "./api";
+import { type LeadRow, listLeads } from "./api";
 
 const PAGE_SIZE = 50;
 
@@ -128,8 +128,11 @@ export default function LeadsList() {
 
         <Inline gap="3" align="center">
           <div className="flex items-center gap-2">
-            <label className="text-xs uppercase tracking-wide text-white/50">Source</label>
+            <label htmlFor="leads-source" className="text-xs uppercase tracking-wide text-white/50">
+              Source
+            </label>
             <select
+              id="leads-source"
               value={source}
               onChange={(e) => handleSourceChange(e.target.value)}
               className="h-8 rounded-md border border-white/15 bg-transparent px-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/40"
@@ -143,8 +146,11 @@ export default function LeadsList() {
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs uppercase tracking-wide text-white/50">Search</label>
+            <label htmlFor="leads-search" className="text-xs uppercase tracking-wide text-white/50">
+              Search
+            </label>
             <input
+              id="leads-search"
               value={q}
               onChange={(e) => handleQueryChange(e.target.value)}
               placeholder="name or title contains…"

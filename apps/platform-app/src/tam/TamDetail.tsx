@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { Badge, Button, Card, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
-import { getTamDetail, type TamRow } from "./api";
+import { type TamRow, getTamDetail } from "./api";
 import { EMPLOYEE_BANDS, REVENUE_BANDS, SENIORITY_BANDS } from "./constants";
 
 const employeeLabel = new Map(EMPLOYEE_BANDS.map((b) => [b.value, b.label]));
@@ -56,7 +56,12 @@ export default function TamDetail() {
         { label: "Function", value: fieldVal(row.function) },
         { label: "Email", value: fieldVal(row.email) },
         { label: "LinkedIn", value: fieldVal(row.linkedin) },
-        { label: "Location", value: row.person_locality ? `${row.person_locality}, ${row.person_state ?? "—"}` : row.person_state ?? "—" },
+        {
+          label: "Location",
+          value: row.person_locality
+            ? `${row.person_locality}, ${row.person_state ?? "—"}`
+            : (row.person_state ?? "—"),
+        },
       ]
     : [];
 
@@ -64,10 +69,23 @@ export default function TamDetail() {
     ? [
         { label: "Company", value: fieldVal(row.company_name) },
         { label: "Industry", value: fieldVal(row.industry) },
-        { label: "Employees", value: row.employee_band ? employeeLabel.get(row.employee_band) ?? row.employee_band : "—" },
-        { label: "Est. revenue", value: row.revenue_band ? revenueLabel.get(row.revenue_band) ?? row.revenue_band : "—" },
+        {
+          label: "Employees",
+          value: row.employee_band
+            ? (employeeLabel.get(row.employee_band) ?? row.employee_band)
+            : "—",
+        },
+        {
+          label: "Est. revenue",
+          value: row.revenue_band ? (revenueLabel.get(row.revenue_band) ?? row.revenue_band) : "—",
+        },
         { label: "Founded", value: fieldVal(row.founded_year) },
-        { label: "HQ", value: row.company_hq_locality ? `${row.company_hq_locality}, ${row.company_hq_state ?? "—"}` : row.company_hq_state ?? "—" },
+        {
+          label: "HQ",
+          value: row.company_hq_locality
+            ? `${row.company_hq_locality}, ${row.company_hq_state ?? "—"}`
+            : (row.company_hq_state ?? "—"),
+        },
         { label: "Website", value: fieldVal(row.website) },
       ]
     : [];
@@ -109,7 +127,9 @@ export default function TamDetail() {
           <Stack gap="6">
             <Stack gap="2">
               <Inline gap="2" align="center" wrap>
-                <Badge tone="default">{seniorityLabel.get(row.seniority_band) ?? row.seniority_band}</Badge>
+                <Badge tone="default">
+                  {seniorityLabel.get(row.seniority_band) ?? row.seniority_band}
+                </Badge>
                 <Badge tone="accent">{row.function}</Badge>
               </Inline>
               <Text as="h1" size="display-sm">

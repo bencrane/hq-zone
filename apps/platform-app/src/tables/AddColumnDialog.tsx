@@ -7,6 +7,7 @@
  */
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,16 +16,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { recipesFor, type Recipe } from "@/lib/recipes";
+import { type Recipe, recipesFor } from "@/lib/recipes";
 import {
+  type Cell,
+  type Column,
+  type Table,
   addColumn,
   newColumnId,
   setCell,
   setCellsBatch,
-  type Cell,
-  type Column,
-  type Table,
 } from "@/lib/tables";
 
 interface AddColumnDialogProps {
@@ -73,7 +73,7 @@ export function AddColumnDialog({ open, onOpenChange, table }: AddColumnDialogPr
         })
         .catch((e: unknown) => {
           const error = e instanceof Error ? e.message : String(e);
-          created.forEach((col) => {
+          for (const col of created) {
             setCell(table.id, row.id, col.id, {
               value: null,
               status: "error",
@@ -81,7 +81,7 @@ export function AddColumnDialog({ open, onOpenChange, table }: AddColumnDialogPr
               error,
               enriched_at: new Date().toISOString(),
             });
-          });
+          }
         });
     }
   }
@@ -129,27 +129,19 @@ export function AddColumnDialog({ open, onOpenChange, table }: AddColumnDialogPr
             {picked ? (
               <div className="space-y-3 text-sm">
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-white/50">
-                    Provider
-                  </div>
+                  <div className="text-xs uppercase tracking-wide text-white/50">Provider</div>
                   <div className="text-white">{picked.provider}</div>
                 </div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-white/50">
-                    Description
-                  </div>
+                  <div className="text-xs uppercase tracking-wide text-white/50">Description</div>
                   <div className="text-white/80">{picked.description}</div>
                 </div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-white/50">
-                    Reads from
-                  </div>
+                  <div className="text-xs uppercase tracking-wide text-white/50">Reads from</div>
                   <div className="text-white/80">{picked.reads_from.join(", ")}</div>
                 </div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-white/50">
-                    Writes
-                  </div>
+                  <div className="text-xs uppercase tracking-wide text-white/50">Writes</div>
                   <ul className="space-y-0.5 text-white/80">
                     {picked.outputs.map((o) => (
                       <li key={o.key}>· {o.name}</li>
@@ -157,8 +149,7 @@ export function AddColumnDialog({ open, onOpenChange, table }: AddColumnDialogPr
                   </ul>
                 </div>
                 <div className="text-xs text-white/40">
-                  Will run on {table.rows.length}{" "}
-                  {table.rows.length === 1 ? "row" : "rows"}.
+                  Will run on {table.rows.length} {table.rows.length === 1 ? "row" : "rows"}.
                 </div>
               </div>
             ) : (

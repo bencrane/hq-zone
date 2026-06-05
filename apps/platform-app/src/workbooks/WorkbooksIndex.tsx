@@ -1,19 +1,14 @@
+import { FolderOpen, Plus } from "lucide-react";
 /**
  * Workbooks index — `/workbooks`. Top-level entry point for the
  * Clay-shape product. Each workbook is a folder containing tables.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderOpen, Plus } from "lucide-react";
 
-import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
-import {
-  createWorkbook,
-  listWorkbooks,
-  subscribe,
-  type Workbook,
-} from "@/lib/workbooks";
 import { listTables } from "@/lib/tables";
+import { type Workbook, createWorkbook, listWorkbooks, subscribe } from "@/lib/workbooks";
+import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
 
 function fmtDate(iso: string): string {
   try {
@@ -37,6 +32,7 @@ export default function WorkbooksIndex() {
   useEffect(() => subscribe(setWorkbooks), []);
 
   // Table counts per workbook — recomputed when workbooks change.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `workbooks` is an intentional recompute trigger — listTables() reads fresh module state, so the memo must invalidate when the workbook list changes. Removing it would serve stale counts.
   const tableCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const t of listTables()) {
@@ -61,7 +57,8 @@ export default function WorkbooksIndex() {
               Workbooks
             </Text>
             <Text size="body-sm" color="muted">
-              Clay-shape workspaces. Each workbook holds related tables — companies, the people from those companies, enrichment columns stacked on top.
+              Clay-shape workspaces. Each workbook holds related tables — companies, the people from
+              those companies, enrichment columns stacked on top.
             </Text>
           </Stack>
           <Button size="sm" onClick={handleNewWorkbook}>
@@ -74,7 +71,8 @@ export default function WorkbooksIndex() {
             <Stack gap="3" align="start">
               <Text size="body-md">No workbooks yet.</Text>
               <Text size="body-sm" color="muted">
-                A workbook is a container for related tables. Make one to start finding companies and stacking enrichments.
+                A workbook is a container for related tables. Make one to start finding companies
+                and stacking enrichments.
               </Text>
               <Button size="sm" onClick={handleNewWorkbook}>
                 <Plus className="h-3.5 w-3.5" /> New workbook
@@ -94,6 +92,7 @@ export default function WorkbooksIndex() {
               </thead>
               <tbody>
                 {workbooks.map((w) => (
+                  // biome-ignore lint/a11y/useKeyWithClickEvents: pre-existing click-to-navigate row; adding a row-level keyboard handler would change runtime behavior (out of scope for this lint-debt sweep).
                   <tr
                     key={w.id}
                     onClick={() => navigate(`/workbooks/${w.id}`)}

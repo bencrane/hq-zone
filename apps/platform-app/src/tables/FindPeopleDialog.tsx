@@ -11,6 +11,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -19,17 +21,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
+  type Column,
+  type Row,
+  type Table,
   createTable,
   newCellEmpty,
   newColumnId,
   newRowId,
-  type Column,
-  type Row,
-  type Table,
 } from "@/lib/tables";
 
 interface FindPeopleDialogProps {
@@ -62,9 +62,7 @@ function pick<T>(arr: T[], s: string, salt: string): T {
 }
 
 function findCompanyNameColumn(t: Table): Column | undefined {
-  return t.columns.find(
-    (c) => c.kind === "native" && /(company.?name|legal.?name)/i.test(c.name),
-  );
+  return t.columns.find((c) => c.kind === "native" && /(company.?name|legal.?name)/i.test(c.name));
 }
 
 export function FindPeopleDialog({ open, onOpenChange, companiesTable }: FindPeopleDialogProps) {
@@ -184,8 +182,8 @@ export function FindPeopleDialog({ open, onOpenChange, companiesTable }: FindPeo
     selected.size === 0
       ? false
       : selected.size === companiesTable.rows.length
-      ? true
-      : "indeterminate";
+        ? true
+        : "indeterminate";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -193,7 +191,8 @@ export function FindPeopleDialog({ open, onOpenChange, companiesTable }: FindPeo
         <DialogHeader>
           <DialogTitle>Find people</DialogTitle>
           <DialogDescription>
-            Spawns a new People table from the selected companies. Each company contributes N people; you can enrich them after.
+            Spawns a new People table from the selected companies. Each company contributes N
+            people; you can enrich them after.
           </DialogDescription>
         </DialogHeader>
 
@@ -256,6 +255,7 @@ export function FindPeopleDialog({ open, onOpenChange, companiesTable }: FindPeo
                 ? String(r.cells[nameCol.id]?.value ?? r.source_id)
                 : r.source_id;
               return (
+                // biome-ignore lint/a11y/noLabelWithoutControl: label wraps the design-system <Checkbox> control (correct association); biome only flags it because Checkbox isn't a native input element.
                 <label
                   key={r.id}
                   className="flex cursor-pointer items-center gap-2 border-b border-white/5 px-3 py-1.5 text-sm last:border-0 hover:bg-white/5"

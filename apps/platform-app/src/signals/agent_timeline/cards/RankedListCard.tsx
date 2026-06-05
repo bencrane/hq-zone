@@ -17,23 +17,48 @@ export function RankedListCard({ payload, title }: { payload: RankedListPayload;
           const denom = it.score_max && it.score_max > 0 ? it.score_max : 1;
           const pct = Math.max(0, Math.min(100, (it.score / denom) * 100));
           return (
-            <Box key={`${it.rank}-${it.id}`} p="2" style={{ borderTop: "1px solid var(--gray-a4)" }}>
+            <Box
+              key={`${it.rank}-${it.id}`}
+              p="2"
+              style={{ borderTop: "1px solid var(--gray-a4)" }}
+            >
               <Flex align="center" justify="between" gap="2">
                 <Flex align="center" gap="2">
-                  <Badge color="indigo" size="2" variant="solid">#{it.rank}</Badge>
+                  <Badge color="indigo" size="2" variant="solid">
+                    #{it.rank}
+                  </Badge>
                   <Text weight="medium">{it.label}</Text>
-                  <Text size="1" color="gray">{it.id}</Text>
+                  <Text size="1" color="gray">
+                    {it.id}
+                  </Text>
                 </Flex>
                 <Flex align="center" gap="2" style={{ minWidth: 160 }}>
-                  <Box style={{ flexGrow: 1, height: 6, background: "var(--gray-a3)", borderRadius: 3 }}>
-                    <Box style={{ width: `${pct}%`, height: "100%", background: "var(--indigo-9)", borderRadius: 3 }} />
+                  <Box
+                    style={{
+                      flexGrow: 1,
+                      height: 6,
+                      background: "var(--gray-a3)",
+                      borderRadius: 3,
+                    }}
+                  >
+                    <Box
+                      style={{
+                        width: `${pct}%`,
+                        height: "100%",
+                        background: "var(--indigo-9)",
+                        borderRadius: 3,
+                      }}
+                    />
                   </Box>
                   <Text size="1" weight="medium" style={{ minWidth: 48, textAlign: "right" }}>
-                    {it.score.toFixed(2)}{it.score_max ? `/${it.score_max}` : ""}
+                    {it.score.toFixed(2)}
+                    {it.score_max ? `/${it.score_max}` : ""}
                   </Text>
                 </Flex>
               </Flex>
-              <Text as="div" size="2" color="gray" mt="1">{it.rationale}</Text>
+              <Text as="div" size="2" color="gray" mt="1">
+                {it.rationale}
+              </Text>
             </Box>
           );
         })}

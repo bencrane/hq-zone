@@ -6,8 +6,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { type LeadList, listLists, subscribe } from "@/lib/leadLists";
 import { Box, Button, Inline, Page, Stack, Text } from "@rare-structure-hq/ui";
-import { listLists, subscribe, type LeadList } from "@/lib/leadLists";
 
 function fmtDate(iso: string): string {
   try {
@@ -74,17 +74,14 @@ export default function ListsOverview() {
               </thead>
               <tbody>
                 {lists.map((l) => (
+                  // biome-ignore lint/a11y/useKeyWithClickEvents: pre-existing click-to-navigate row; adding a row-level keyboard handler would change runtime behavior (out of scope for this lint-debt sweep).
                   <tr
                     key={l.id}
                     onClick={() => navigate(`/lists/${l.id}`)}
                     className="cursor-pointer border-b border-[color:var(--color-border-subtle)] last:border-0 hover:bg-[color:var(--color-surface-raised)]"
                   >
-                    <td className="px-3 py-2 text-[color:var(--color-text-strong)]">
-                      {l.name}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-mono-xs">
-                      {l.person_ids.length}
-                    </td>
+                    <td className="px-3 py-2 text-[color:var(--color-text-strong)]">{l.name}</td>
+                    <td className="px-3 py-2 font-mono text-mono-xs">{l.person_ids.length}</td>
                     <td className="px-3 py-2 font-mono text-mono-xs text-[color:var(--color-text-muted)]">
                       {fmtDate(l.updated_at)}
                     </td>

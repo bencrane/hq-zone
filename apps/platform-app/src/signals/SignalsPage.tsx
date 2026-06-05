@@ -6,28 +6,38 @@
  * with revert-on-error.
  */
 import {
-  AlertDialog, Badge, Box, Button, Callout, Code, DropdownMenu, Flex, IconButton,
-  SegmentedControl, Table, Text, TextField, Tooltip,
+  AlertDialog,
+  Badge,
+  Box,
+  Button,
+  Callout,
+  Code,
+  DropdownMenu,
+  Flex,
+  IconButton,
+  SegmentedControl,
+  Table,
+  Text,
+  TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { Check, Loader2, Pencil, Play, Sparkles, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import {
-  Button as UiButton, Inline, Page, Stack, Text as UiText,
-} from "@rare-structure-hq/ui";
+import { Inline, Page, Stack, Button as UiButton, Text as UiText } from "@rare-structure-hq/ui";
 
 import {
-  deleteGtmSignal,
-  fireGtmSignal,
-  fireGtmSignalStatus,
-  getGtmSignals,
-  patchGtmSignal,
   type GtmSignal,
   type GtmSignalFireResult,
   type GtmSignalPatch,
   type GtmSignalsResponse,
   type WebhookTarget,
+  deleteGtmSignal,
+  fireGtmSignal,
+  fireGtmSignalStatus,
+  getGtmSignals,
+  patchGtmSignal,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
@@ -37,8 +47,8 @@ import "./SignalsPage.css";
 const KNOWN_KEY_LABELS: Record<string, string> = {
   time_window_hours: "Time window",
   min_obligated_usd: "Min obligated",
-  award_types:       "Award types",
-  action_types:      "Action types",
+  award_types: "Award types",
+  action_types: "Action types",
 };
 
 function formatTimeWindow(hours: number): string {
@@ -51,8 +61,10 @@ function formatTimeWindow(hours: number): string {
 
 function formatUsd(n: number): string {
   return n.toLocaleString("en-US", {
-    style: "currency", currency: "USD",
-    minimumFractionDigits: 0, maximumFractionDigits: 0,
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   });
 }
 
@@ -64,7 +76,11 @@ function formatActionType(v: unknown): string {
 function CriteriaCell({ criteria }: { criteria: Record<string, unknown> }) {
   const entries = Object.entries(criteria);
   if (entries.length === 0) {
-    return <Text size="2" color="gray">(no criteria)</Text>;
+    return (
+      <Text size="2" color="gray">
+        (no criteria)
+      </Text>
+    );
   }
   return (
     <Flex direction="column" gap="1">
@@ -92,7 +108,8 @@ function CriteriaCell({ criteria }: { criteria: Record<string, unknown> }) {
                 <Badge
                   key={`${i}-${String(t)}`}
                   color={t === null ? "gray" : "violet"}
-                  variant="soft" radius="full"
+                  variant="soft"
+                  radius="full"
                 >
                   {formatActionType(t)}
                 </Badge>
@@ -100,12 +117,18 @@ function CriteriaCell({ criteria }: { criteria: Record<string, unknown> }) {
             </Flex>
           );
         } else {
-          value = <Code variant="ghost" size="2">{JSON.stringify(v)}</Code>;
+          value = (
+            <Code variant="ghost" size="2">
+              {JSON.stringify(v)}
+            </Code>
+          );
         }
         return (
           <Flex key={k} gap="2" align="baseline">
             <Text
-              size="1" color="gray" weight="medium"
+              size="1"
+              color="gray"
+              weight="medium"
               style={{ textTransform: "uppercase", minWidth: 110 }}
             >
               {label}
@@ -132,7 +155,10 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
  * target so toggling Test/Prod in edit mode updates the indicator live.
  */
 function UrlCell({
-  value, editing, isFiring, onChange,
+  value,
+  editing,
+  isFiring,
+  onChange,
 }: {
   value: string;
   editing: boolean;
@@ -150,7 +176,9 @@ function UrlCell({
           style={{ flex: 1, minWidth: 0 }}
         />
         {isFiring ? (
-          <Badge color="green" variant="solid" radius="full" size="1">FIRING</Badge>
+          <Badge color="green" variant="solid" radius="full" size="1">
+            FIRING
+          </Badge>
         ) : null}
       </Flex>
     );
@@ -161,8 +189,11 @@ function UrlCell({
         size="2"
         title={value || undefined}
         style={{
-          flex: 1, minWidth: 0,
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          flex: 1,
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
           fontFamily: "var(--code-font-family, monospace)",
           color: value ? undefined : "var(--gray-9)",
         }}
@@ -170,7 +201,9 @@ function UrlCell({
         {value || "(empty)"}
       </Text>
       {isFiring ? (
-        <Badge color="green" variant="solid" radius="full" size="1">FIRING</Badge>
+        <Badge color="green" variant="solid" radius="full" size="1">
+          FIRING
+        </Badge>
       ) : null}
     </Flex>
   );
@@ -181,7 +214,9 @@ function UrlCell({
  * in edit mode. Mutates the parent row's draft, not the server.
  */
 function TargetCell({
-  value, editing, onChange,
+  value,
+  editing,
+  onChange,
 }: {
   value: WebhookTarget;
   editing: boolean;
@@ -190,14 +225,20 @@ function TargetCell({
   if (editing) {
     return (
       <SegmentedControl.Root
-        size="1" value={value} onValueChange={(v) => onChange(v as WebhookTarget)}
+        size="1"
+        value={value}
+        onValueChange={(v) => onChange(v as WebhookTarget)}
       >
         <SegmentedControl.Item value="test">Test</SegmentedControl.Item>
         <SegmentedControl.Item value="prod">Prod</SegmentedControl.Item>
       </SegmentedControl.Root>
     );
   }
-  return <Code variant="ghost" size="2">{value}</Code>;
+  return (
+    <Code variant="ghost" size="2">
+      {value}
+    </Code>
+  );
 }
 
 /**
@@ -213,9 +254,10 @@ function FireResultBadge({ result }: { result: GtmSignalFireResult }) {
   const statusText = isHttp
     ? `HTTP ${dispatch.status}`
     : `${dispatch.status}${dispatch.exception_type ? ` (${dispatch.exception_type})` : ""}`;
-  const rowText = result.limit_applied !== null
-    ? `${result.sent_rows} of ${result.matched_rows_total} rows`
-    : `${result.sent_rows} rows`;
+  const rowText =
+    result.limit_applied !== null
+      ? `${result.sent_rows} of ${result.matched_rows_total} rows`
+      : `${result.sent_rows} rows`;
   return (
     <Flex direction="column" gap="1" align="end">
       <Badge color={color} variant="soft" radius="full" size="1">
@@ -238,17 +280,30 @@ function FireResultBadge({ result }: { result: GtmSignalFireResult }) {
  * for the payload that goes to n8n — None = same as production cron.
  */
 const FIRE_PRESETS: Array<{ label: string; limit: number | null }> = [
-  { label: "Send 1 row",     limit: 1 },
-  { label: "Send 10 rows",   limit: 10 },
-  { label: "Send 50 rows",   limit: 50 },
-  { label: "Send 100 rows",  limit: 100 },
+  { label: "Send 1 row", limit: 1 },
+  { label: "Send 10 rows", limit: 10 },
+  { label: "Send 50 rows", limit: 50 },
+  { label: "Send 100 rows", limit: 100 },
 ];
 
 function RowActions({
   signalSlug,
-  editing, saving, deleting, firing, hasChanges, error, fireError, fireResult,
-  webhookTarget, hasTargetUrl,
-  onEdit, onSave, onCancel, onDelete, onFire, onRunAgent,
+  editing,
+  saving,
+  deleting,
+  firing,
+  hasChanges,
+  error,
+  fireError,
+  fireResult,
+  webhookTarget,
+  hasTargetUrl,
+  onEdit,
+  onSave,
+  onCancel,
+  onDelete,
+  onFire,
+  onRunAgent,
 }: {
   signalSlug: string;
   editing: boolean;
@@ -287,7 +342,9 @@ function RowActions({
             <>
               <Tooltip content={hasChanges ? "Save changes" : "No changes"}>
                 <IconButton
-                  size="2" variant="solid" color="green"
+                  size="2"
+                  variant="solid"
+                  color="green"
                   disabled={saving || !hasChanges}
                   onClick={onSave}
                   aria-label="Save signal"
@@ -297,7 +354,9 @@ function RowActions({
               </Tooltip>
               <Tooltip content="Cancel">
                 <IconButton
-                  size="2" variant="soft" color="gray"
+                  size="2"
+                  variant="soft"
+                  color="gray"
                   disabled={saving}
                   onClick={onCancel}
                   aria-label="Cancel edit"
@@ -312,7 +371,9 @@ function RowActions({
                 <Tooltip content={fireTooltip}>
                   <DropdownMenu.Trigger disabled={fireDisabled}>
                     <IconButton
-                      size="2" variant="soft" color="blue"
+                      size="2"
+                      variant="soft"
+                      color="blue"
                       disabled={fireDisabled}
                       aria-label="Fire signal"
                     >
@@ -321,9 +382,7 @@ function RowActions({
                   </DropdownMenu.Trigger>
                 </Tooltip>
                 <DropdownMenu.Content>
-                  <DropdownMenu.Label>
-                    Fire → {webhookTarget} URL
-                  </DropdownMenu.Label>
+                  <DropdownMenu.Label>Fire → {webhookTarget} URL</DropdownMenu.Label>
                   {FIRE_PRESETS.map((p) => (
                     <DropdownMenu.Item key={p.label} onClick={() => onFire(p.limit)}>
                       {p.label}
@@ -337,7 +396,9 @@ function RowActions({
               </DropdownMenu.Root>
               <Tooltip content="Run agent on this signal's cohort">
                 <IconButton
-                  size="2" variant="soft" color="iris"
+                  size="2"
+                  variant="soft"
+                  color="iris"
                   onClick={onRunAgent}
                   aria-label="Run agent"
                 >
@@ -346,7 +407,9 @@ function RowActions({
               </Tooltip>
               <Tooltip content="Edit signal">
                 <IconButton
-                  size="2" variant="soft" color="gray"
+                  size="2"
+                  variant="soft"
+                  color="gray"
                   onClick={onEdit}
                   aria-label="Edit signal"
                 >
@@ -369,7 +432,9 @@ function RowActions({
           <Tooltip content={editing ? "Save or cancel edits first" : "Delete signal"}>
             <AlertDialog.Trigger disabled={deleting || editing}>
               <IconButton
-                size="2" variant="ghost" color="red"
+                size="2"
+                variant="ghost"
+                color="red"
                 disabled={deleting || editing}
                 aria-label="Delete signal"
               >
@@ -382,17 +447,25 @@ function RowActions({
             <AlertDialog.Description>
               <Text as="p" size="2">
                 You are about to delete{" "}
-                <Code variant="ghost" size="2">{signalSlug}</Code> from{" "}
-                <Code variant="ghost" size="2">ops.gtm_signals</Code>.
+                <Code variant="ghost" size="2">
+                  {signalSlug}
+                </Code>{" "}
+                from{" "}
+                <Code variant="ghost" size="2">
+                  ops.gtm_signals
+                </Code>
+                .
               </Text>
               <Text as="p" size="2" mt="2" color="gray">
-                This is permanent. The Modal cron will stop firing it on the next
-                tick. Re-creating it requires an INSERT.
+                This is permanent. The Modal cron will stop firing it on the next tick. Re-creating
+                it requires an INSERT.
               </Text>
             </AlertDialog.Description>
             <Flex gap="3" mt="4" justify="end">
               <AlertDialog.Cancel>
-                <Button variant="soft" color="gray">Cancel</Button>
+                <Button variant="soft" color="gray">
+                  Cancel
+                </Button>
               </AlertDialog.Cancel>
               <AlertDialog.Action>
                 <Button variant="solid" color="red" onClick={onDelete}>
@@ -403,8 +476,16 @@ function RowActions({
           </AlertDialog.Content>
         </AlertDialog.Root>
       </Flex>
-      {error ? <Text size="1" color="red">{error}</Text> : null}
-      {fireError ? <Text size="1" color="red" style={{ maxWidth: 220, textAlign: "right" }}>{fireError}</Text> : null}
+      {error ? (
+        <Text size="1" color="red">
+          {error}
+        </Text>
+      ) : null}
+      {fireError ? (
+        <Text size="1" color="red" style={{ maxWidth: 220, textAlign: "right" }}>
+          {fireError}
+        </Text>
+      ) : null}
       {fireResult ? <FireResultBadge result={fireResult} /> : null}
     </Flex>
   );
@@ -416,7 +497,9 @@ function RowActions({
  * values reflect either the draft (when editing) or the server row.
  */
 function SignalRow({
-  sig, onPatch, onDelete,
+  sig,
+  onPatch,
+  onDelete,
 }: {
   sig: GtmSignal;
   onPatch: (slug: string, patch: GtmSignalPatch) => Promise<void>;
@@ -436,21 +519,37 @@ function SignalRow({
   const [agentPanelOpen, setAgentPanelOpen] = useState(false);
 
   // If the row identity changes under us (rare — e.g. reload), drop the draft.
-  useEffect(() => { setDraft({}); setError(null); }, [sig.signal_slug]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `sig.signal_slug` is the intended reset trigger, not a value read in the body — the effect must re-run when row identity changes to clear the draft. Removing it would make this mount-only.
+  useEffect(() => {
+    setDraft({});
+    setError(null);
+  }, [sig.signal_slug]);
 
   const testUrl = (draft.webhook_test_url ?? sig.webhook_test_url) as string;
   const prodUrl = (draft.webhook_prod_url ?? sig.webhook_prod_url) as string;
-  const target  = (draft.webhook_target ?? sig.webhook_target) as WebhookTarget;
+  const target = (draft.webhook_target ?? sig.webhook_target) as WebhookTarget;
   const hasChanges = Object.keys(draft).length > 0;
   // Fire uses the *server* target/URL, not the draft — operator should save
   // edits before firing to avoid surprises ("did this fire test or prod?").
-  const serverTargetUrl = sig.webhook_target === "prod" ? sig.webhook_prod_url : sig.webhook_test_url;
+  const serverTargetUrl =
+    sig.webhook_target === "prod" ? sig.webhook_prod_url : sig.webhook_test_url;
 
-  const handleEdit   = () => { setError(null); setEditing(true); };
-  const handleCancel = () => { setDraft({}); setError(null); setEditing(false); };
-  const handleSave   = async () => {
-    if (!hasChanges) { setEditing(false); return; }
-    setSaving(true); setError(null);
+  const handleEdit = () => {
+    setError(null);
+    setEditing(true);
+  };
+  const handleCancel = () => {
+    setDraft({});
+    setError(null);
+    setEditing(false);
+  };
+  const handleSave = async () => {
+    if (!hasChanges) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    setError(null);
     try {
       await onPatch(sig.signal_slug, draft);
       setDraft({});
@@ -465,19 +564,21 @@ function SignalRow({
     // Confirmation is handled by the AlertDialog in RowActions — this only
     // fires after the operator clicks "Delete permanently" in the modal.
     setDeleting(true);
-    try { await onDelete(sig.signal_slug); }
-    finally { setDeleting(false); }
+    try {
+      await onDelete(sig.signal_slug);
+    } finally {
+      setDeleting(false);
+    }
   };
   const handleFire = async (limit: number | null) => {
     const label = limit === null ? "all matched rows" : `${limit} rows`;
     const ok = window.confirm(
-      `Fire signal ${sig.signal_slug} now?\n\n` +
-      `→ ${sig.webhook_target.toUpperCase()} URL\n` +
-      `→ ${label}\n\n` +
-      `This shuttles to Modal and POSTs a real payload (same as the daily cron).`,
+      `Fire signal ${sig.signal_slug} now?\n\n→ ${sig.webhook_target.toUpperCase()} URL\n→ ${label}\n\nThis shuttles to Modal and POSTs a real payload (same as the daily cron).`,
     );
     if (!ok) return;
-    setFiring(true); setFireError(null); setFireResult(null);
+    setFiring(true);
+    setFireError(null);
+    setFireResult(null);
     try {
       // POST /fire returns immediately with a call_id (Modal .spawn under the
       // hood — no more 30s-timeout split-brain). Then poll /fire/status/:id
@@ -497,7 +598,9 @@ function SignalRow({
         }
       }
       if (result === null) {
-        throw new Error(`fire still pending after ${MAX_POLL_MS / 1000}s — check Modal dashboard for call_id ${spawn.call_id}`);
+        throw new Error(
+          `fire still pending after ${MAX_POLL_MS / 1000}s — check Modal dashboard for call_id ${spawn.call_id}`,
+        );
       }
       setFireResult(result);
     } catch (e) {
@@ -510,26 +613,41 @@ function SignalRow({
   return (
     <Table.Row align="start">
       <Table.RowHeaderCell>
-        <Code variant="ghost" size="2">{sig.signal_slug}</Code>
+        <Code variant="ghost" size="2">
+          {sig.signal_slug}
+        </Code>
       </Table.RowHeaderCell>
-      <Table.Cell><StatusBadge isActive={sig.is_active} /></Table.Cell>
-      <Table.Cell><Code variant="ghost" size="2">{sig.spine_target}</Code></Table.Cell>
-      <Table.Cell><CriteriaCell criteria={sig.criteria} /></Table.Cell>
+      <Table.Cell>
+        <StatusBadge isActive={sig.is_active} />
+      </Table.Cell>
+      <Table.Cell>
+        <Code variant="ghost" size="2">
+          {sig.spine_target}
+        </Code>
+      </Table.Cell>
+      <Table.Cell>
+        <CriteriaCell criteria={sig.criteria} />
+      </Table.Cell>
       <Table.Cell>
         <UrlCell
-          value={testUrl} editing={editing} isFiring={target === "test"}
+          value={testUrl}
+          editing={editing}
+          isFiring={target === "test"}
           onChange={(v) => setDraft((d) => ({ ...d, webhook_test_url: v }))}
         />
       </Table.Cell>
       <Table.Cell>
         <UrlCell
-          value={prodUrl} editing={editing} isFiring={target === "prod"}
+          value={prodUrl}
+          editing={editing}
+          isFiring={target === "prod"}
           onChange={(v) => setDraft((d) => ({ ...d, webhook_prod_url: v }))}
         />
       </Table.Cell>
       <Table.Cell>
         <TargetCell
-          value={target} editing={editing}
+          value={target}
+          editing={editing}
           onChange={(v) => setDraft((d) => ({ ...d, webhook_target: v }))}
         />
       </Table.Cell>
@@ -568,7 +686,9 @@ function SignalRow({
 }
 
 function SignalsTable({
-  signals, onPatch, onDelete,
+  signals,
+  onPatch,
+  onDelete,
 }: {
   signals: GtmSignal[];
   onPatch: (slug: string, patch: GtmSignalPatch) => Promise<void>;
@@ -608,12 +728,7 @@ function SignalsTable({
       </Table.Header>
       <Table.Body>
         {signals.map((sig) => (
-          <SignalRow
-            key={sig.signal_slug}
-            sig={sig}
-            onPatch={onPatch}
-            onDelete={onDelete}
-          />
+          <SignalRow key={sig.signal_slug} sig={sig} onPatch={onPatch} onDelete={onDelete} />
         ))}
       </Table.Body>
     </Table.Root>
@@ -643,39 +758,57 @@ export default function SignalsPage() {
     setLoading(true);
     setErr(null);
     getGtmSignals()
-      .then((res) => { if (!cancelled) setData(res); })
+      .then((res) => {
+        if (!cancelled) setData(res);
+      })
       .catch((e) => {
         if (cancelled) return;
         setErr(e instanceof Error ? e.message : "signals fetch failed");
         setData(null);
       })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Optimistic patch: update the row in local state, fire the API call,
   // revert on error by reloading (server is source of truth).
   const onPatch = async (slug: string, patch: GtmSignalPatch) => {
-    setData((prev) => prev ? {
-      signals: prev.signals.map((s) => s.signal_slug === slug ? { ...s, ...patch } : s),
-    } : prev);
+    setData((prev) =>
+      prev
+        ? {
+            signals: prev.signals.map((s) => (s.signal_slug === slug ? { ...s, ...patch } : s)),
+          }
+        : prev,
+    );
     try {
       const updated = await patchGtmSignal(slug, patch);
-      setData((prev) => prev ? {
-        signals: prev.signals.map((s) => s.signal_slug === slug ? updated : s),
-      } : prev);
+      setData((prev) =>
+        prev
+          ? {
+              signals: prev.signals.map((s) => (s.signal_slug === slug ? updated : s)),
+            }
+          : prev,
+      );
     } catch (e) {
       await reload(); // revert by re-fetching truth
-      throw e;        // let the cell surface the error
+      throw e; // let the cell surface the error
     }
   };
 
   // Optimistic delete: remove the row, revert on error.
   const onDelete = async (slug: string) => {
     const snapshot = data;
-    setData((prev) => prev ? {
-      signals: prev.signals.filter((s) => s.signal_slug !== slug),
-    } : prev);
+    setData((prev) =>
+      prev
+        ? {
+            signals: prev.signals.filter((s) => s.signal_slug !== slug),
+          }
+        : prev,
+    );
     try {
       await deleteGtmSignal(slug);
     } catch (e) {
@@ -696,31 +829,47 @@ export default function SignalsPage() {
       <Stack gap="6">
         <Inline justify="between" align="center">
           <Inline gap="3" align="center">
-            <Link to="/"><UiButton variant="ghost" size="sm">← HQ</UiButton></Link>
+            <Link to="/">
+              <UiButton variant="ghost" size="sm">
+                ← HQ
+              </UiButton>
+            </Link>
             <Stack gap="1">
-              <UiText as="h1" size="display-sm">GTM Signals</UiText>
+              <UiText as="h1" size="display-sm">
+                GTM Signals
+              </UiText>
               <UiText size="body-sm" color="muted">
-                Configuration-driven trigger registry. Modal cron reads active rows daily
-                at 09:00 UTC, compiles criteria, POSTs matched cohorts to the URL set by
-                each signal's Fires selector (Test or Prod).
+                Configuration-driven trigger registry. Modal cron reads active rows daily at 09:00
+                UTC, compiles criteria, POSTs matched cohorts to the URL set by each signal's Fires
+                selector (Test or Prod).
               </UiText>
             </Stack>
           </Inline>
           <Inline gap="3" align="center">
-            <UiText size="body-xs" color="muted" mono>{session?.user.email}</UiText>
-            <UiButton variant="ghost" size="sm" onClick={() => void signOut()}>Sign out</UiButton>
+            <UiText size="body-xs" color="muted" mono>
+              {session?.user.email}
+            </UiText>
+            <UiButton variant="ghost" size="sm" onClick={() => void signOut()}>
+              Sign out
+            </UiButton>
           </Inline>
         </Inline>
 
         {loading ? (
           <Inline gap="2" align="center">
             <Loader2 size={14} className="animate-spin" />
-            <UiText size="body-sm" color="muted">Loading signals…</UiText>
+            <UiText size="body-sm" color="muted">
+              Loading signals…
+            </UiText>
           </Inline>
         ) : err ? (
           <Inline gap="3" align="center">
-            <UiText size="body-sm" color="muted">Failed to load signals: {err}</UiText>
-            <Button size="1" variant="soft" onClick={() => void reload()}>Retry</Button>
+            <UiText size="body-sm" color="muted">
+              Failed to load signals: {err}
+            </UiText>
+            <Button size="1" variant="soft" onClick={() => void reload()}>
+              Retry
+            </Button>
           </Inline>
         ) : data ? (
           <>
@@ -732,11 +881,7 @@ export default function SignalsPage() {
                 </Text>
               </Box>
             ) : null}
-            <SignalsTable
-              signals={data.signals}
-              onPatch={onPatch}
-              onDelete={onDelete}
-            />
+            <SignalsTable signals={data.signals} onPatch={onPatch} onDelete={onDelete} />
           </>
         ) : null}
       </Stack>

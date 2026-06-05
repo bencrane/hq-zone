@@ -66,12 +66,17 @@ function matches(row: TamRow, f: TamSearchFilters): boolean {
   if (f.function && row.function !== f.function) return false;
   if (f.person_state && row.person_state !== f.person_state) return false;
   // company
-  if (f.company_name && !row.company_name.toLowerCase().includes(f.company_name.toLowerCase())) return false;
+  if (f.company_name && !row.company_name.toLowerCase().includes(f.company_name.toLowerCase()))
+    return false;
   if (f.industry && row.industry !== f.industry) return false;
   if (f.employee_band && row.employee_band !== f.employee_band) return false;
   if (f.revenue_band && row.revenue_band !== f.revenue_band) return false;
   if (f.hq_state && row.company_hq_state !== f.hq_state) return false;
-  if (f.hq_locality && !(row.company_hq_locality ?? "").toLowerCase().includes(f.hq_locality.toLowerCase())) return false;
+  if (
+    f.hq_locality &&
+    !(row.company_hq_locality ?? "").toLowerCase().includes(f.hq_locality.toLowerCase())
+  )
+    return false;
   if (f.founded_year_min != null && (row.founded_year ?? 0) < f.founded_year_min) return false;
   if (f.founded_year_max != null && (row.founded_year ?? 9999) > f.founded_year_max) return false;
   return true;

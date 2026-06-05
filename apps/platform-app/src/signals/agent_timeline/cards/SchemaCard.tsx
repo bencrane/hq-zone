@@ -35,14 +35,22 @@ export function SchemaCard({ payload, title }: { payload: SchemaCardPayload; tit
           <Table.Body>
             {cols.map((c) => (
               <Table.Row key={c.name}>
-                <Table.Cell><Code>{c.name}</Code></Table.Cell>
-                <Table.Cell><Code color="gray">{c.type}</Code></Table.Cell>
                 <Table.Cell>
-                  {c.nullable === undefined
-                    ? <Text size="1" color="gray">—</Text>
-                    : <Badge color={c.nullable ? "gray" : "indigo"} variant="soft">
-                        {c.nullable ? "nullable" : "NOT NULL"}
-                      </Badge>}
+                  <Code>{c.name}</Code>
+                </Table.Cell>
+                <Table.Cell>
+                  <Code color="gray">{c.type}</Code>
+                </Table.Cell>
+                <Table.Cell>
+                  {c.nullable === undefined ? (
+                    <Text size="1" color="gray">
+                      —
+                    </Text>
+                  ) : (
+                    <Badge color={c.nullable ? "gray" : "indigo"} variant="soft">
+                      {c.nullable ? "nullable" : "NOT NULL"}
+                    </Badge>
+                  )}
                 </Table.Cell>
               </Table.Row>
             ))}

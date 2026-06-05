@@ -76,10 +76,7 @@ const OPERATOR_LABELS: Record<ViewOperator, string> = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getField(
-  source: ViewSourceCatalogEntry | null,
-  fieldName: string,
-): ViewField | null {
+function getField(source: ViewSourceCatalogEntry | null, fieldName: string): ViewField | null {
   if (!source) return null;
   return source.fields.find((f) => f.name === fieldName) ?? null;
 }
@@ -579,9 +576,7 @@ export default function ViewBuilder() {
                     .map((c) => ({
                       field: c.field,
                       operator: c.operator,
-                      ...(operatorNeedsValue(c.operator as ViewOperator)
-                        ? { value: c.value }
-                        : {}),
+                      ...(operatorNeedsValue(c.operator as ViewOperator) ? { value: c.value } : {}),
                     })),
                 },
                 null,

@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from "lucide-react";
 /**
  * Sign-in surface. Two paths:
  *   1. Email + password — for existing accounts in the Supabase auth.users
@@ -7,11 +8,10 @@
  * Lives inside the /opportunities route so the existing map route stays
  * unauthenticated.
  */
-import { useState, type FormEvent } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { type FormEvent, useState } from "react";
 
-import { Button, Card, Page, Stack, Text } from "@rare-structure-hq/ui";
 import { supabase } from "@/lib/supabase";
+import { Button, Card, Page, Stack, Text } from "@rare-structure-hq/ui";
 
 export function SignIn() {
   const [email, setEmail] = useState("");
@@ -117,10 +117,7 @@ export function SignIn() {
                     Send magic link instead
                   </Button>
                   {err && (
-                    <Text
-                      size="body-sm"
-                      className="text-[color:var(--color-state-error)]"
-                    >
+                    <Text size="body-sm" className="text-[color:var(--color-state-error)]">
                       {err}
                     </Text>
                   )}

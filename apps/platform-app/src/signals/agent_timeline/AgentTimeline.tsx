@@ -14,15 +14,15 @@
  * user.custom_tool_result for these.
  */
 import { Badge, Box, Callout, Card, Code, Flex, Text } from "@radix-ui/themes";
-import { useState, type ReactElement } from "react";
+import { type ReactElement, useState } from "react";
 
 import type {
-  AgentRunEvent,
+  AgentCustomToolUseEvent,
   AgentMcpToolUseEvent,
   AgentMessageEvent,
+  AgentRunEvent,
   AgentThinkingEvent,
   AgentToolUseEvent,
-  AgentCustomToolUseEvent,
   PresentResultInput,
   SessionErrorEvent,
   SessionStatusEvent,
@@ -54,14 +54,24 @@ function isThinkingBlock(b: { type: string }): b is ThinkingBlock {
 // ───────────────────────────────────────────────────────────────────────────
 
 function AgentMessageBlock({ ev }: { ev: AgentMessageEvent }) {
-  const texts = (ev.content ?? []).filter(isTextBlock).map((b) => b.text).join("");
+  const texts = (ev.content ?? [])
+    .filter(isTextBlock)
+    .map((b) => b.text)
+    .join("");
   if (!texts) return null;
   return (
-    <Box my="2" p="3" style={{
-      background: "var(--gray-a2)", borderRadius: 6,
-      borderLeft: "3px solid var(--indigo-9)",
-    }}>
-      <Text as="div" size="2" style={{ whiteSpace: "pre-wrap" }}>{texts}</Text>
+    <Box
+      my="2"
+      p="3"
+      style={{
+        background: "var(--gray-a2)",
+        borderRadius: 6,
+        borderLeft: "3px solid var(--indigo-9)",
+      }}
+    >
+      <Text as="div" size="2" style={{ whiteSpace: "pre-wrap" }}>
+        {texts}
+      </Text>
     </Box>
   );
 }
@@ -70,7 +80,10 @@ function AgentThinkingBlock({ ev }: { ev: AgentThinkingEvent }) {
   const [open, setOpen] = useState(false);
   const txt =
     ev.thinking ??
-    (ev.content ?? []).filter(isThinkingBlock).map((b) => b.thinking).join("") ??
+    (ev.content ?? [])
+      .filter(isThinkingBlock)
+      .map((b) => b.thinking)
+      .join("") ??
     "";
   if (!txt) return null;
   return (
@@ -79,24 +92,42 @@ function AgentThinkingBlock({ ev }: { ev: AgentThinkingEvent }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         style={{
-          background: "transparent", border: "none", padding: 0, cursor: "pointer",
-          fontFamily: "inherit", fontSize: "11px", color: "var(--gray-11)",
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          fontFamily: "inherit",
+          fontSize: "11px",
+          color: "var(--gray-11)",
         }}
       >
         {open ? "▼" : "▶"} thinking ({txt.length} chars)
       </button>
       {open ? (
-        <Box mt="1" p="2" style={{
-          background: "var(--gray-a2)", borderRadius: 4,
-          fontFamily: "var(--code-font-family)", fontSize: "11px",
-          whiteSpace: "pre-wrap", color: "var(--gray-11)",
-        }}>{txt}</Box>
+        <Box
+          mt="1"
+          p="2"
+          style={{
+            background: "var(--gray-a2)",
+            borderRadius: 4,
+            fontFamily: "var(--code-font-family)",
+            fontSize: "11px",
+            whiteSpace: "pre-wrap",
+            color: "var(--gray-11)",
+          }}
+        >
+          {txt}
+        </Box>
       ) : null}
     </Box>
   );
 }
 
-function ToolUseChip({ name, input, kind }: { name: string; input: unknown; kind: "tool" | "mcp" | "custom" }) {
+function ToolUseChip({
+  name,
+  input,
+  kind,
+}: { name: string; input: unknown; kind: "tool" | "mcp" | "custom" }) {
   const [open, setOpen] = useState(false);
   const inputStr = typeof input === "string" ? input : JSON.stringify(input);
   const inputPreview = inputStr.length > 80 ? `${inputStr.slice(0, 80)}…` : inputStr;
@@ -106,22 +137,41 @@ function ToolUseChip({ name, input, kind }: { name: string; input: unknown; kind
         type="button"
         onClick={() => setOpen((v) => !v)}
         style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          padding: "4px 8px", borderRadius: 4,
-          background: "var(--gray-a3)", color: "var(--gray-12)",
-          border: "1px solid var(--gray-a4)", cursor: "pointer",
-          fontFamily: "var(--code-font-family)", fontSize: "11px",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "4px 8px",
+          borderRadius: 4,
+          background: "var(--gray-a3)",
+          color: "var(--gray-12)",
+          border: "1px solid var(--gray-a4)",
+          cursor: "pointer",
+          fontFamily: "var(--code-font-family)",
+          fontSize: "11px",
         }}
       >
-        🔧 <strong>{kind === "mcp" ? "mcp." : kind === "custom" ? "custom." : ""}{name}</strong>
+        🔧{" "}
+        <strong>
+          {kind === "mcp" ? "mcp." : kind === "custom" ? "custom." : ""}
+          {name}
+        </strong>
         <span style={{ color: "var(--gray-10)" }}>({inputPreview})</span>
       </button>
       {open ? (
-        <Box mt="1" p="2" style={{
-          background: "var(--gray-a2)", borderRadius: 4,
-          fontFamily: "var(--code-font-family)", fontSize: "11px",
-          whiteSpace: "pre-wrap", color: "var(--gray-12)",
-        }}>{inputStr.length > 4000 ? `${inputStr.slice(0, 4000)}…` : inputStr}</Box>
+        <Box
+          mt="1"
+          p="2"
+          style={{
+            background: "var(--gray-a2)",
+            borderRadius: 4,
+            fontFamily: "var(--code-font-family)",
+            fontSize: "11px",
+            whiteSpace: "pre-wrap",
+            color: "var(--gray-12)",
+          }}
+        >
+          {inputStr.length > 4000 ? `${inputStr.slice(0, 4000)}…` : inputStr}
+        </Box>
       ) : null}
     </Box>
   );
@@ -130,9 +180,14 @@ function ToolUseChip({ name, input, kind }: { name: string; input: unknown; kind
 function PresentResultBlock({ ev }: { ev: AgentCustomToolUseEvent }) {
   const input = ev.input as PresentResultInput;
   if (!input || typeof input !== "object" || !input.result_type) {
-    return <Callout.Root color="amber" size="1" my="2">
-      <Callout.Text>present_result with no result_type — payload: <Code>{JSON.stringify(ev.input).slice(0, 240)}</Code></Callout.Text>
-    </Callout.Root>;
+    return (
+      <Callout.Root color="amber" size="1" my="2">
+        <Callout.Text>
+          present_result with no result_type — payload:{" "}
+          <Code>{JSON.stringify(ev.input).slice(0, 240)}</Code>
+        </Callout.Text>
+      </Callout.Root>
+    );
   }
   const payload = (input.payload ?? {}) as Record<string, unknown>;
   const title = input.title;
@@ -140,27 +195,51 @@ function PresentResultBlock({ ev }: { ev: AgentCustomToolUseEvent }) {
   switch (input.result_type) {
     case "data_table": {
       const p = asResultPayload("data_table", payload);
-      return p ? <Box my="2"><DataTableCard payload={p} title={title} /></Box> : null;
+      return p ? (
+        <Box my="2">
+          <DataTableCard payload={p} title={title} />
+        </Box>
+      ) : null;
     }
     case "ranked_list": {
       const p = asResultPayload("ranked_list", payload);
-      return p ? <Box my="2"><RankedListCard payload={p} title={title} /></Box> : null;
+      return p ? (
+        <Box my="2">
+          <RankedListCard payload={p} title={title} />
+        </Box>
+      ) : null;
     }
     case "metric_grid": {
       const p = asResultPayload("metric_grid", payload);
-      return p ? <Box my="2"><MetricGridCard payload={p} title={title} /></Box> : null;
+      return p ? (
+        <Box my="2">
+          <MetricGridCard payload={p} title={title} />
+        </Box>
+      ) : null;
     }
     case "recommendation_card": {
       const p = asResultPayload("recommendation_card", payload);
-      return p ? <Box my="2"><RecommendationCard payload={p} title={title} /></Box> : null;
+      return p ? (
+        <Box my="2">
+          <RecommendationCard payload={p} title={title} />
+        </Box>
+      ) : null;
     }
     case "narrative_summary": {
       const p = asResultPayload("narrative_summary", payload);
-      return p ? <Box my="2"><NarrativeSummaryCard payload={p} title={title} /></Box> : null;
+      return p ? (
+        <Box my="2">
+          <NarrativeSummaryCard payload={p} title={title} />
+        </Box>
+      ) : null;
     }
     case "schema_card": {
       const p = asResultPayload("schema_card", payload);
-      return p ? <Box my="2"><SchemaCard payload={p} title={title} /></Box> : null;
+      return p ? (
+        <Box my="2">
+          <SchemaCard payload={p} title={title} />
+        </Box>
+      ) : null;
     }
     default: {
       // Unknown result_type — fall back to a JSON dump so the operator sees
@@ -168,9 +247,19 @@ function PresentResultBlock({ ev }: { ev: AgentCustomToolUseEvent }) {
       return (
         <Card variant="surface" my="2">
           <Callout.Root color="amber" size="1" mb="2">
-            <Callout.Text>Unknown result_type: <Code>{input.result_type}</Code> — agent and frontend are out of sync</Callout.Text>
+            <Callout.Text>
+              Unknown result_type: <Code>{input.result_type}</Code> — agent and frontend are out of
+              sync
+            </Callout.Text>
           </Callout.Root>
-          <Box style={{ maxHeight: 240, overflow: "auto", fontFamily: "var(--code-font-family)", fontSize: "11px" }}>
+          <Box
+            style={{
+              maxHeight: 240,
+              overflow: "auto",
+              fontFamily: "var(--code-font-family)",
+              fontSize: "11px",
+            }}
+          >
             <pre>{JSON.stringify(payload, null, 2)}</pre>
           </Box>
         </Card>
@@ -184,12 +273,12 @@ function PresentResultBlock({ ev }: { ev: AgentCustomToolUseEvent }) {
 // ───────────────────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, "gray" | "blue" | "grass" | "amber" | "tomato"> = {
-  connecting:                  "gray",
-  "session.status_running":     "blue",
-  "session.status_idle":        "grass",
+  connecting: "gray",
+  "session.status_running": "blue",
+  "session.status_idle": "grass",
   "session.status_rescheduled": "amber",
-  "session.status_terminated":  "tomato",
-  "session.error":              "tomato",
+  "session.status_terminated": "tomato",
+  "session.error": "tomato",
 };
 
 export interface TimelineStatus {
@@ -208,11 +297,23 @@ function StatusPill({ status }: { status: TimelineStatus | null }) {
   const color = STATUS_COLORS[status.type] ?? "gray";
   const label = status.type.replace(/^session\./, "");
   return (
-    <Flex align="center" gap="2" p="2" style={{
-      borderTop: "1px solid var(--gray-a4)", background: "var(--color-panel-translucent)",
-    }}>
-      <Badge color={color} variant="solid" radius="full">{label}</Badge>
-      {status.detail ? <Text size="1" color="gray">{status.detail}</Text> : null}
+    <Flex
+      align="center"
+      gap="2"
+      p="2"
+      style={{
+        borderTop: "1px solid var(--gray-a4)",
+        background: "var(--color-panel-translucent)",
+      }}
+    >
+      <Badge color={color} variant="solid" radius="full">
+        {label}
+      </Badge>
+      {status.detail ? (
+        <Text size="1" color="gray">
+          {status.detail}
+        </Text>
+      ) : null}
     </Flex>
   );
 }
@@ -236,7 +337,14 @@ function renderEvent(ev: AgentRunEvent, key: string): ReactElement | null {
 
     case "agent.mcp_tool_use": {
       const e = ev as AgentMcpToolUseEvent;
-      return <ToolUseChip key={key} name={`${e.server_name ? `${e.server_name}.` : ""}${e.name}`} input={e.input} kind="mcp" />;
+      return (
+        <ToolUseChip
+          key={key}
+          name={`${e.server_name ? `${e.server_name}.` : ""}${e.name}`}
+          input={e.input}
+          kind="mcp"
+        />
+      );
     }
 
     case "agent.custom_tool_use": {
@@ -287,18 +395,22 @@ export function AgentTimeline({ events, status }: AgentTimelineProps) {
   // Surface the LATEST session.status_idle / .error inline above the status
   // pill so the operator sees the stop_reason (end_turn vs requires_action
   // vs error message) without scrolling.
-  const lastTerminal = [...events].reverse().find(
-    (e) =>
-      e.type === "session.status_idle" ||
-      e.type === "session.status_terminated" ||
-      e.type === "session.error",
-  ) as SessionStatusEvent | SessionErrorEvent | undefined;
+  const lastTerminal = [...events]
+    .reverse()
+    .find(
+      (e) =>
+        e.type === "session.status_idle" ||
+        e.type === "session.status_terminated" ||
+        e.type === "session.error",
+    ) as SessionStatusEvent | SessionErrorEvent | undefined;
 
   return (
     <Flex direction="column" height="100%">
       <Box flexGrow="1" p="3" style={{ overflowY: "auto" }}>
         {events.length === 0 ? (
-          <Text size="2" color="gray">Waiting for agent…</Text>
+          <Text size="2" color="gray">
+            Waiting for agent…
+          </Text>
         ) : (
           events.map((ev, i) => renderEvent(ev, `${ev.id ?? "i"}-${i}`))
         )}

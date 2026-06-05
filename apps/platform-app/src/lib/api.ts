@@ -270,17 +270,14 @@ export async function fireGtmSignal(
   signalSlug: string,
   body: GtmSignalFireRequest = {},
 ): Promise<GtmSignalFireSpawn> {
-  const res = await fetch(
-    `${API_BASE}/api/v1/signals/${encodeURIComponent(signalSlug)}/fire`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: await bearer(),
-      },
-      body: JSON.stringify(body),
+  const res = await fetch(`${API_BASE}/api/v1/signals/${encodeURIComponent(signalSlug)}/fire`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: await bearer(),
     },
-  );
+    body: JSON.stringify(body),
+  });
   if (!res.ok) {
     throw new Error(`signal fire failed: ${res.status} ${await res.text()}`);
   }
@@ -289,10 +286,9 @@ export async function fireGtmSignal(
 }
 
 export async function fireGtmSignalStatus(callId: string): Promise<GtmSignalFireStatus> {
-  const res = await fetch(
-    `${API_BASE}/api/v1/signals/fire/status/${encodeURIComponent(callId)}`,
-    { headers: { Authorization: await bearer() } },
-  );
+  const res = await fetch(`${API_BASE}/api/v1/signals/fire/status/${encodeURIComponent(callId)}`, {
+    headers: { Authorization: await bearer() },
+  });
   if (!res.ok) {
     throw new Error(`signal fire status failed: ${res.status} ${await res.text()}`);
   }

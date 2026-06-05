@@ -77,9 +77,9 @@ export type ViewEntityGrain = z.infer<typeof viewEntityGrainSchema>;
 // ---------------------------------------------------------------------------
 
 export const viewSourceKindSchema = z.enum([
-  "lance_dataset",       // Lance dataset in R2/Polaris
-  "lance_parquet_glob",  // raw R2 parquet glob (virtual source via overlay)
-  "lance_bridge",        // Lance bridge dataset (Pattern B)
+  "lance_dataset", // Lance dataset in R2/Polaris
+  "lance_parquet_glob", // raw R2 parquet glob (virtual source via overlay)
+  "lance_bridge", // Lance bridge dataset (Pattern B)
 ]);
 export type ViewSourceKind = z.infer<typeof viewSourceKindSchema>;
 

@@ -5,8 +5,8 @@
  */
 import { useEffect, useRef, useState } from "react";
 
-import { Box, Inline, Stack, Text } from "@rare-structure-hq/ui";
 import type { SearchFilters } from "@/lib/api";
+import { Box, Inline, Stack, Text } from "@rare-structure-hq/ui";
 import { NOTICE_TYPES, SET_ASIDE_CODES, US_STATES } from "./constants";
 
 const inputClass =
@@ -35,6 +35,7 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
   // Debounced auto-apply. 350ms feels right for typed inputs; selects
   // also flow through so the UX is consistent.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deps are intentionally the filter values only — the effect re-debounces on input change, not on `onApply` identity. Adding `onApply` would re-fire the debounce on every parent render if the callback isn't memoized.
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -104,9 +105,12 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {/* NAICS */}
           <Stack gap="1">
-            <label className={labelClass}>NAICS</label>
+            <label className={labelClass} htmlFor="opp-naics">
+              NAICS
+            </label>
             <Inline gap="2" align="center">
               <input
+                id="opp-naics"
                 type="text"
                 value={naics}
                 onChange={(e) => setNaics(e.target.value.replace(/[^0-9]/g, ""))}
@@ -126,8 +130,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
           {/* Department */}
           <Stack gap="1">
-            <label className={labelClass}>Department</label>
+            <label className={labelClass} htmlFor="opp-department">
+              Department
+            </label>
             <input
+              id="opp-department"
               type="text"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
@@ -138,8 +145,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
           {/* State */}
           <Stack gap="1">
-            <label className={labelClass}>PoP State</label>
+            <label className={labelClass} htmlFor="opp-pop-state">
+              PoP State
+            </label>
             <select
+              id="opp-pop-state"
               value={popState}
               onChange={(e) => setPopState(e.target.value)}
               className={inputClass}
@@ -155,8 +165,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
           {/* Set-aside */}
           <Stack gap="1">
-            <label className={labelClass}>Set-aside</label>
+            <label className={labelClass} htmlFor="opp-set-aside">
+              Set-aside
+            </label>
             <select
+              id="opp-set-aside"
               value={setAside}
               onChange={(e) => setSetAside(e.target.value)}
               className={inputClass}
@@ -172,8 +185,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
           {/* Notice type */}
           <Stack gap="1">
-            <label className={labelClass}>Notice type</label>
+            <label className={labelClass} htmlFor="opp-notice-type">
+              Notice type
+            </label>
             <select
+              id="opp-notice-type"
               value={noticeType}
               onChange={(e) => setNoticeType(e.target.value)}
               className={inputClass}
@@ -189,8 +205,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
           {/* Posted date range */}
           <Stack gap="1">
-            <label className={labelClass}>Posted (from)</label>
+            <label className={labelClass} htmlFor="opp-posted-from">
+              Posted (from)
+            </label>
             <input
+              id="opp-posted-from"
               type="date"
               value={postedGte}
               onChange={(e) => setPostedGte(e.target.value)}
@@ -198,8 +217,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
             />
           </Stack>
           <Stack gap="1">
-            <label className={labelClass}>Posted (to)</label>
+            <label className={labelClass} htmlFor="opp-posted-to">
+              Posted (to)
+            </label>
             <input
+              id="opp-posted-to"
               type="date"
               value={postedLte}
               onChange={(e) => setPostedLte(e.target.value)}
@@ -209,8 +231,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
 
           {/* Response deadline range */}
           <Stack gap="1">
-            <label className={labelClass}>Deadline (from)</label>
+            <label className={labelClass} htmlFor="opp-deadline-from">
+              Deadline (from)
+            </label>
             <input
+              id="opp-deadline-from"
               type="date"
               value={deadlineGte}
               onChange={(e) => setDeadlineGte(e.target.value)}
@@ -218,8 +243,11 @@ export function FilterBar({ initial, onApply }: FilterBarProps) {
             />
           </Stack>
           <Stack gap="1">
-            <label className={labelClass}>Deadline (to)</label>
+            <label className={labelClass} htmlFor="opp-deadline-to">
+              Deadline (to)
+            </label>
             <input
+              id="opp-deadline-to"
               type="date"
               value={deadlineLte}
               onChange={(e) => setDeadlineLte(e.target.value)}

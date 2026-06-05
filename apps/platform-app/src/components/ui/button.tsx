@@ -9,15 +9,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-white text-black hover:bg-white/90",
-        outline:
-          "border border-white/20 bg-transparent text-white hover:bg-white/5",
+        default: "bg-white text-black hover:bg-white/90",
+        outline: "border border-white/20 bg-transparent text-white hover:bg-white/5",
         ghost: "text-white hover:bg-white/5",
-        secondary:
-          "bg-white/10 text-white hover:bg-white/15",
-        destructive:
-          "bg-red-600 text-white hover:bg-red-600/90",
+        secondary: "bg-white/10 text-white hover:bg-white/15",
+        destructive: "bg-red-600 text-white hover:bg-red-600/90",
       },
       size: {
         default: "h-9 px-4 py-2",
@@ -43,11 +39,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
+      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
     );
   },
 );
