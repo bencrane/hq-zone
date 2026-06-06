@@ -4,8 +4,8 @@
  * body-injection logic that was copy-pasted across six route files.
  *
  * The BFF always presents the static service token as its OWN identity
- * (`Authorization: Bearer <HQX_SERVICE_TOKEN>`); core-x verifies it with a
- * constant-time compare (see core-x `app/auth/service_token.py`). The OPERATOR
+ * (`Authorization: Bearer <EDGE_API_SERVICE_TOKEN>`); edge-api verifies it with a
+ * constant-time compare (edge_api `src/service_token.py`). The OPERATOR
  * identity is injected one of three ways, chosen per route:
  *
  *   - "header": forward the validated JWT as `X-User-Bearer`. core-x routes that
@@ -31,7 +31,7 @@ export function hqxHeaders(
   sendsJsonBody: boolean,
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${env.HQX_SERVICE_TOKEN}`,
+    Authorization: `Bearer ${env.EDGE_API_SERVICE_TOKEN}`,
   };
   if (sendsJsonBody) headers["Content-Type"] = "application/json";
   if (identity === "header") headers["X-User-Bearer"] = `Bearer ${user.jwt}`;
