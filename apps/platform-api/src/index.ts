@@ -5,9 +5,8 @@
  * - Validate hq-zone Supabase JWTs (ES256 + JWKS)
  * - /health (unauthenticated) for liveness probes
  * - /api/v1/me (auth-required) echoes the validated user
- * - /api/v1/campaigns/* (auth-required) — BFF enroll-list reshaping
- * - everything else under /api/v1/* — the declarative core-x gateway
- *   (hqx/table.ts): sam-opps, coverage, gtm/people, signals, views, agent-runs
+ * - /api/v1/agent-runs/* (auth-required) — the gtm-agent chat backend, proxied
+ *   to edge-api via the declarative gateway (hqx/table.ts)
  */
 
 import { serve } from "@hono/node-server";
@@ -18,7 +17,6 @@ import { requestId } from "hono/request-id";
 import { type AuthVariables, requireUser } from "./auth.ts";
 import { allowedOrigins, env } from "./env.ts";
 import { hqxRouter } from "./hqx/router.ts";
-import { campaignsRoutes } from "./routes/campaigns.ts";
 
 const app = new Hono<{ Variables: AuthVariables & { requestId: string } }>();
 
@@ -43,10 +41,9 @@ app.get("/api/v1/me", requireUser, (c) => {
   return c.json({ user_id: user.user_id, email: user.email, app_env: env.APP_ENV });
 });
 
-app.route("/api/v1/campaigns", campaignsRoutes);
-// Every other core-x surface — sam-opps, coverage, gtm/people, signals, views,
-// agent-runs — is served by the declarative gateway. New surface = one row in
-// hqx/table.ts; no new file, no copy-pasted auth/forwarding.
+// agent-runs (the gtm-agent chat backend) is served by the declarative gateway,
+// proxied to edge-api. The former hq-x route-groups + the campaigns enroll-list
+// were retired in the core-x migration — hq-zone talks only to edge-api now.
 app.route("/", hqxRouter());
 
 const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 8000;

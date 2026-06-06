@@ -26,6 +26,11 @@ const envSchema = z.object({
   // and are referenced by every BFF enroll-list call.
   HQX_DEFAULT_ORG_ID: z.string().uuid(),
   HQX_DEFAULT_BRAND_ID: z.string().uuid(),
+  // Outbound to edge-api (the core-x managed-agents edge) — the BFF's only live
+  // upstream now (agent-runs). The service token is the BFF identity; edge-api
+  // verifies it (require_service_token / EDGE_API_SERVICE_TOKEN).
+  EDGE_API_URL: z.string().url(),
+  EDGE_API_SERVICE_TOKEN: z.string().min(1),
   ALLOWED_ORIGINS: z.string().default("http://localhost:5173"),
   APP_ENV: z.enum(["prd", "stg", "dev"]),
 });
@@ -37,6 +42,8 @@ const parsed = envSchema.safeParse({
   HQX_SERVICE_TOKEN: process.env.HQX_SERVICE_TOKEN,
   HQX_DEFAULT_ORG_ID: process.env.HQX_DEFAULT_ORG_ID,
   HQX_DEFAULT_BRAND_ID: process.env.HQX_DEFAULT_BRAND_ID,
+  EDGE_API_URL: process.env.EDGE_API_URL,
+  EDGE_API_SERVICE_TOKEN: process.env.EDGE_API_SERVICE_TOKEN,
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
   APP_ENV: process.env.APP_ENV,
 });
