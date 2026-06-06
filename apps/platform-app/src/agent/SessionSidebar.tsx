@@ -1,25 +1,19 @@
 /**
  * SessionSidebar — collapsible left rail listing past gtm-agent chats.
  * Click a row to reopen it (events reload from the server by session_id);
- * "New chat" starts a fresh session; per-row ⋯ menu renames or deletes.
+ * "New chat" starts a fresh session. Hovering a row reveals inline rename
+ * (pencil) and delete (×) controls.
  *
  * @radix-ui/themes throughout: Box/Flex/Text, Button, IconButton, ScrollArea,
- * DropdownMenu, TextField.
+ * TextField.
  */
-import {
-  Box,
-  Button,
-  DropdownMenu,
-  Flex,
-  IconButton,
-  ScrollArea,
-  Text,
-  TextField,
-} from "@radix-ui/themes";
-import { Ellipsis, PanelLeft, PanelLeftClose, Plus } from "lucide-react";
+import { Box, Button, Flex, IconButton, ScrollArea, Text, TextField } from "@radix-ui/themes";
+import { PanelLeft, PanelLeftClose, Pencil, Plus, X } from "lucide-react";
 import { type KeyboardEvent, useState } from "react";
 
 import type { AgentRunSummary } from "@/lib/agentRuns";
+
+import "./SessionSidebar.css";
 
 export interface SessionSidebarProps {
   sessions: AgentRunSummary[];
@@ -154,7 +148,7 @@ export function SessionSidebar({
                 );
               }
               return (
-                <Box key={s.id} style={{ position: "relative" }}>
+                <Box key={s.id} className="hq-chat-row">
                   <Button
                     variant={active ? "soft" : "ghost"}
                     color={active ? "grass" : "gray"}
@@ -165,7 +159,7 @@ export function SessionSidebar({
                     style={{
                       width: "100%",
                       justifyContent: "flex-start",
-                      paddingRight: 32,
+                      paddingRight: 56,
                       cursor: "pointer",
                     }}
                   >
@@ -176,29 +170,35 @@ export function SessionSidebar({
                       {s.title}
                     </Text>
                   </Button>
-                  <Box
-                    style={{
-                      position: "absolute",
-                      right: 4,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                    }}
-                  >
-                    <DropdownMenu.Root>
-                      <DropdownMenu.Trigger>
-                        <IconButton variant="ghost" color="gray" size="1" aria-label="Chat options">
-                          <Ellipsis size={14} />
-                        </IconButton>
-                      </DropdownMenu.Trigger>
-                      <DropdownMenu.Content size="1">
-                        <DropdownMenu.Item onSelect={() => startRename(s)}>
-                          Rename
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item color="red" onSelect={() => onDelete(s.id)}>
-                          Delete
-                        </DropdownMenu.Item>
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Root>
+                  <Box className="hq-chat-row-actions">
+                    <IconButton
+                      variant="ghost"
+                      color="gray"
+                      size="1"
+                      aria-label={`Rename ${s.title}`}
+                      title="Rename"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startRename(s);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Pencil size={13} />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      color="gray"
+                      size="1"
+                      aria-label={`Delete ${s.title}`}
+                      title="Delete chat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(s.id);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <X size={14} />
+                    </IconButton>
                   </Box>
                 </Box>
               );

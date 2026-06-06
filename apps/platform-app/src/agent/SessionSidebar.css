@@ -1,0 +1,37 @@
+/*
+ * SessionSidebar — per-row hover affordances.
+ *
+ * Chat rows read clean by default; the rename (pencil) and delete (×) controls
+ * fade in on hover or keyboard focus-within, so tabbing to them keeps them
+ * visible. Touch devices have no hover state, so controls are always shown
+ * there.
+ */
+.hq-chat-row {
+  position: relative;
+}
+
+.hq-chat-row-actions {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.hq-chat-row:hover .hq-chat-row-actions,
+.hq-chat-row:focus-within .hq-chat-row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .hq-chat-row-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
