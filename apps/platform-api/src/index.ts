@@ -16,6 +16,7 @@ import { requestId } from "hono/request-id";
 
 import { type AuthVariables, requireUser } from "./auth.ts";
 import { allowedOrigins, env } from "./env.ts";
+import { dealsAdminRoutes } from "./routes/deals-admin.ts";
 import { hqxRouter } from "./hqx/router.ts";
 
 const app = new Hono<{ Variables: AuthVariables & { requestId: string } }>();
@@ -40,6 +41,9 @@ app.get("/api/v1/me", requireUser, (c) => {
   const user = c.get("user");
   return c.json({ user_id: user.user_id, email: user.email, app_env: env.APP_ENV });
 });
+
+// deals administration: originate, etc.
+app.route("/api/v1/deals", dealsAdminRoutes);
 
 // agent-runs (the gtm-agent chat backend) is served by the declarative gateway,
 // proxied to edge-api. The former hq-x route-groups + the campaigns enroll-list

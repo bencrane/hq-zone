@@ -295,3 +295,30 @@ export async function fireGtmSignalStatus(callId: string): Promise<GtmSignalFire
   const env = (await res.json()) as { data: GtmSignalFireStatus };
   return env.data;
 }
+
+// ────────────── Deals ──────────────
+
+export interface DealOriginatedResponse {
+  envelopeId: string;
+  documentId: number | null;
+  dealHandle: string;
+  signingToken: string | null;
+  signLink: string;
+  status: string;
+  documensoHost: string;
+}
+
+export async function originateDeal(handle: string): Promise<DealOriginatedResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/deals/${encodeURIComponent(handle)}/originate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: await bearer(),
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`originate failed: ${res.status} ${await res.text()}`);
+  }
+  const json = await res.json();
+  return json.data as DealOriginatedResponse;
+}

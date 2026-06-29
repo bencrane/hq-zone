@@ -23,6 +23,7 @@
  *   `/views`                     → list of materialized-view definitions (auth).
  *   `/views/new`                 → view builder form (auth).
  *   `/views/:id`                 → single view detail (auth).
+ *   `/m/:handle`                 → deal mandate detail (auth).
  */
 
 import { Navigate, Route, Routes } from "react-router-dom";
@@ -30,6 +31,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AgentChatPage from "./agent/AgentChatPage";
 import CampaignDemoView from "./campaign-demo/CampaignDemoView";
 import CampaignBuilder from "./campaigns/CampaignBuilder";
+import Mandate from "./deals/Mandate";
 import { HQBadge } from "./components/HQBadge";
 import CoveragePage from "./coverage/CoveragePage";
 import LeadsList from "./leads/LeadsList";
@@ -145,6 +147,14 @@ export function App() {
           element={
             <RequireAuth>
               <OppDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/m/:handle"
+          element={
+            <RequireAuth>
+              <Mandate />
             </RequireAuth>
           }
         />
